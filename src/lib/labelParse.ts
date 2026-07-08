@@ -21,6 +21,8 @@ export function matchSku(text: string, knownSkus: KnownSku[]): KnownSku | null {
 }
 
 const QTD_PATTERNS = [
+  // DANFE simplificado / declaração de conteúdo: número solto logo após "Total" no rodapé da etiqueta.
+  /Total[\s\S]{0,20}?(\d+)\s*$/i,
   /qtd[e]?[.:\s]+(\d+)/i,
   /quantidade[:\s]+(\d+)/i,
   /(\d+)\s*(?:unidade|peça|item)/i,
@@ -28,8 +30,9 @@ const QTD_PATTERNS = [
 ]
 
 export function parseQtd(text: string): number | null {
+  const trimmed = text.trim()
   for (const pattern of QTD_PATTERNS) {
-    const m = text.match(pattern)
+    const m = trimmed.match(pattern)
     if (m) return parseInt(m[1])
   }
   return null
