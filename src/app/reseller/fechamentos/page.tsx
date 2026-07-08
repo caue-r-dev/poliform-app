@@ -83,7 +83,7 @@ export default async function ResellerFechamentosPage() {
                     <th>SKU</th>
                     <th>Cor</th>
                     <th>Qtd</th>
-                    <th>Repasse</th>
+                    <th>Valor</th>
                     <th>Total</th>
                   </tr>
                 </thead>

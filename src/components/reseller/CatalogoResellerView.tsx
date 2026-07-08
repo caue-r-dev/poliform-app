@@ -40,7 +40,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
             <tr>
               <th>Produto</th>
               <th>SKU</th>
-              <th>Repasse</th>
+              <th>Valor</th>
               <th>Cores</th>
               <th>Fotos e vídeos</th>
             </tr>
