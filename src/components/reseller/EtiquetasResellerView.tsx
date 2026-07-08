@@ -31,6 +31,8 @@ type QueueItem = {
   status: 'lendo' | 'pronto' | 'erro'
   matched: boolean
   error?: string
+  page: number | null
+  totalPages: number | null
 }
 
 const fmtDT = (s: string) => new Date(s).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -60,6 +62,7 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
       const item: QueueItem = {
         localId, file, previewUrl, storagePath: null,
         productId: '', corId: null, qtd: 1, status: 'lendo', matched: false,
+        page: null, totalPages: null,
       }
       setQueue(q => [...q, item])
       processFile(localId, file, isPDF)
@@ -77,21 +80,57 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
         return
       }
 
-      let text = ''
-      let qtd: number | null = null
-
+      // PDF com mais de 1 página = mais de uma etiqueta/pedido no mesmo arquivo.
       if (isPDF) {
-        text = json.extracted?.raw_text ?? ''
-        qtd = json.extracted?.qtd ?? null
-      } else {
-        const { createWorker } = await import('tesseract.js')
-        const worker = await createWorker('eng')
-        const { data } = await worker.recognize(file)
-        await worker.terminate()
-        text = data.text
-        qtd = parseQtd(text)
+        const pageTexts: string[] = json.pageTexts ?? []
+        const totalPages = pageTexts.length || 1
+
+        if (totalPages > 1) {
+          setQueue(q => {
+            const base = q.find(it => it.localId === localId)
+            if (!base) return q
+            const expanded: QueueItem[] = pageTexts.map((text, idx) => {
+              const match = matchSku(text, knownSkus)
+              const qtd = parseQtd(text)
+              return {
+                ...base,
+                localId: uid(),
+                storagePath: json.path,
+                productId: match?.productId ?? '',
+                corId: match?.corId ?? null,
+                qtd: qtd && qtd > 0 ? qtd : 1,
+                matched: !!match,
+                status: 'pronto',
+                page: idx + 1,
+                totalPages,
+              }
+            })
+            return q.flatMap(it => it.localId === localId ? expanded : [it])
+          })
+          return
+        }
+
+        const text = pageTexts[0] ?? ''
+        const match = matchSku(text, knownSkus)
+        const qtd = parseQtd(text)
+        updateItem(localId, {
+          storagePath: json.path,
+          productId: match?.productId ?? '',
+          corId: match?.corId ?? null,
+          qtd: qtd && qtd > 0 ? qtd : 1,
+          matched: !!match,
+          status: 'pronto',
+          totalPages: 1,
+        })
+        return
       }
 
+      const { createWorker } = await import('tesseract.js')
+      const worker = await createWorker('eng')
+      const { data } = await worker.recognize(file)
+      await worker.terminate()
+      const text = data.text
+      const qtd = parseQtd(text)
       const match = matchSku(text, knownSkus)
 
       updateItem(localId, {
@@ -198,6 +237,11 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                           ? <img src={it.previewUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />
                           : <span style={{ display: 'inline-flex', width: 44, height: 44, alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', borderRadius: 6, border: '1px solid var(--line)', fontSize: 20 }}>📄</span>
                         }
+                        {it.totalPages && it.totalPages > 1 && (
+                          <div style={{ fontSize: 10.5, color: 'var(--ink-soft)', fontWeight: 700, marginTop: 3, textAlign: 'center' }}>
+                            pág. {it.page}/{it.totalPages}
+                          </div>
+                        )}
                       </td>
                       <td>
                         {it.status === 'lendo'

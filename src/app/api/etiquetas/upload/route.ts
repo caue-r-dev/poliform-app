@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
-import { parseQtd } from '@/lib/labelParse'
+import { PDFParse } from 'pdf-parse'
 
 export const runtime = 'nodejs'
-
-function extractFromText(text: string): {
-  qtd: number | null
-  raw_text: string
-} {
-  return { qtd: parseQtd(text), raw_text: text.slice(0, 500) }
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -36,17 +29,16 @@ export async function POST(req: NextRequest) {
 
   const bytes = await file.arrayBuffer()
 
-  // Extrai texto do PDF para pré-preencher campos
-  let extracted: ReturnType<typeof extractFromText> | null = null
+  // Extrai texto por página do PDF — cada página do PDF é uma etiqueta/pedido distinto.
+  let pageTexts: string[] = []
   if (isPDF) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParseModule = await import('pdf-parse') as any
-      const pdfParse = pdfParseModule.default ?? pdfParseModule
-      const result = await pdfParse(Buffer.from(bytes))
-      extracted = extractFromText(result.text)
+      const parser = new PDFParse({ data: Buffer.from(bytes) })
+      const result = await parser.getText()
+      pageTexts = result.pages.map(p => p.text)
+      await parser.destroy()
     } catch {
-      // Falha silenciosa — usuário preenche manualmente
+      // Falha silenciosa — revendedor identifica manualmente
     }
   }
 
@@ -59,6 +51,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     path: storagePath,
     isPDF,
-    extracted,
+    pageTexts,
   })
 }
