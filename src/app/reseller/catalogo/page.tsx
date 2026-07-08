@@ -30,7 +30,7 @@ export default async function CatalogoPage() {
   }))
 
   return (
-    <>
+    <div style={{ padding: '28px 32px', flex: 1 }}>
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Catálogo</h1>
@@ -49,6 +49,6 @@ export default async function CatalogoPage() {
       </div>
 
       <CatalogoResellerView products={products} />
-    </>
+    </div>
   )
 }

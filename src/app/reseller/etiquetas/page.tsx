@@ -62,13 +62,13 @@ export default async function ResellerEtiquetasPage() {
 
   return (
     <>
-      <div style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '18px 24px' }}>
-        <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Minhas Etiquetas</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 600 }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '18px 32px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Minhas Etiquetas</h1>
+        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
           Envie a foto da etiqueta de postagem — o sistema identifica o produto pelo SKU automaticamente
         </p>
       </div>
-      <div style={{ padding: '24px', flex: 1 }}>
+      <div style={{ padding: '28px 32px', flex: 1 }}>
         <EtiquetasResellerView etiquetas={etiquetasComUrl} knownSkus={knownSkus} products={products} />
       </div>
     </>

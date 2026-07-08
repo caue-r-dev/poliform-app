@@ -164,7 +164,14 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
           </p>
         </div>
         <div style={{ padding: 18 }}>
-          <input ref={fileRef} type="file" accept="image/*,application/pdf" multiple onChange={handleFiles} />
+          <input
+            ref={fileRef} id="etiqueta-files" type="file"
+            accept="image/*,application/pdf" multiple onChange={handleFiles}
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' }}
+          />
+          <label htmlFor="etiqueta-files" className="btn btn-primary" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+            + Enviar etiqueta(s)
+          </label>
           {statusMsg && <p className="helper" style={{ color: 'var(--brand)' }}>{statusMsg}</p>}
         </div>
 

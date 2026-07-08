@@ -28,7 +28,7 @@ export default async function ResellerFechamentosPage() {
     .order('data_emissao', { ascending: false })
 
   return (
-    <>
+    <div style={{ padding: '28px 32px', flex: 1 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Fechamentos</h1>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
@@ -109,6 +109,6 @@ export default async function ResellerFechamentosPage() {
           </details>
         ))}
       </div>
-    </>
+    </div>
   )
 }
