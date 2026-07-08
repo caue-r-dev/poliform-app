@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
-import { PDFParse } from 'pdf-parse'
 
 export const runtime = 'nodejs'
 
@@ -33,12 +32,14 @@ export async function POST(req: NextRequest) {
   let pageTexts: string[] = []
   if (isPDF) {
     try {
+      const { PDFParse } = await import('pdf-parse')
       const parser = new PDFParse({ data: Buffer.from(bytes) })
       const result = await parser.getText()
       pageTexts = result.pages.map(p => p.text)
       await parser.destroy()
-    } catch {
-      // Falha silenciosa — revendedor identifica manualmente
+    } catch (err) {
+      // Falha na extração não pode derrubar o upload — revendedor identifica manualmente.
+      console.error('pdf-parse falhou:', err)
     }
   }
 
