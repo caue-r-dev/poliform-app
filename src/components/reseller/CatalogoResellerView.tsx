@@ -8,9 +8,13 @@ type Product = {
   id: string
   nome: string
   sku: string
+  repasse: number | null
   cores: CorEntry[]
   midias: Midia[]
 }
+
+const fmtBRL = (n: number | null) =>
+  n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function CatalogoResellerView({ products }: { products: Product[] }) {
   const [expandedColorsId, setExpandedColorsId] = useState<string | null>(null)
@@ -36,6 +40,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
             <tr>
               <th>Produto</th>
               <th>SKU</th>
+              <th>Repasse</th>
               <th>Cores</th>
               <th>Fotos e vídeos</th>
             </tr>
@@ -43,7 +48,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
           <tbody>
             {products.length === 0 && (
               <tr className="empty-row">
-                <td colSpan={4}><span className="ast">✳</span>Nenhum produto disponível no momento.</td>
+                <td colSpan={5}><span className="ast">✳</span>Nenhum produto disponível no momento.</td>
               </tr>
             )}
             {products.map(p => {
@@ -53,6 +58,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
                 <tr key={p.id}>
                   <td style={{ fontWeight: 800 }}>{p.nome}</td>
                   <td><span className="tag tag-muted">{p.sku}</span></td>
+                  <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(p.repasse)}</td>
                   <td>
                     <button onClick={() => toggleColors(p.id)} className="btn btn-sm btn-ghost">
                       {p.cores.length} cor{p.cores.length === 1 ? '' : 'es'} {colorsOpen ? '▲' : '▼'}
@@ -70,7 +76,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
                 colorsOpen && (
                   <tr key={`${p.id}-cores`} style={{ background: 'var(--paper)' }}>
-                    <td colSpan={4} style={{ padding: '14px 20px' }}>
+                    <td colSpan={5} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.cores.length > 0
                           ? p.cores.map(c => (
@@ -91,7 +97,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
                 midiaOpen && (
                   <tr key={`${p.id}-midia`} style={{ background: 'var(--paper)' }}>
-                    <td colSpan={4} style={{ padding: '14px 20px' }}>
+                    <td colSpan={5} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.midias.length > 0
                           ? p.midias.map(m => (

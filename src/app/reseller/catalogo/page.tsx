@@ -1,6 +1,7 @@
 import { adminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { calcCustoUnitario } from '@/lib/calc'
 import CatalogoResellerView from '@/components/reseller/CatalogoResellerView'
 
 export const dynamic = 'force-dynamic'
@@ -12,13 +13,15 @@ export default async function CatalogoPage() {
 
   const { data: rows } = await adminClient
     .from('products')
-    .select('id, nome, sku, imagem, album_fotos, product_cores(cor_id, cores_globais(nome, codigo))')
+    .select('id, nome, sku, custo_producao, margem_producao, imagem, album_fotos, product_cores(cor_id, cores_globais(nome, codigo))')
     .order('nome')
 
+  // Só o repasse já calculado sai daqui — custo_producao/margem_producao nunca vão pro cliente.
   const products = (rows ?? []).map(p => ({
     id: p.id,
     nome: p.nome,
     sku: p.sku,
+    repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
     cores: (p.product_cores ?? []).flatMap(pc => {
       const cor = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
       return cor ? [{ nome: cor.nome, codigo: cor.codigo }] : []
