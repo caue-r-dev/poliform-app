@@ -13,3 +13,10 @@ alter table public.products
   add column embalagem_comprimento_cm numeric(10,2),
   add column embalagem_largura_cm     numeric(10,2),
   add column embalagem_altura_cm      numeric(10,2);
+
+alter table public.materiais_globais enable row level security;
+
+create policy "materiais_select_auth" on public.materiais_globais
+  for select to authenticated using (true);
+
+GRANT SELECT ON public.materiais_globais TO authenticated;
