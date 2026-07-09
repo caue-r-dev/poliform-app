@@ -13,24 +13,39 @@ export default async function CatalogoPage() {
 
   const { data: rows } = await adminClient
     .from('products')
-    .select('id, nome, sku, custo_producao, margem_producao, imagem, album_fotos, product_cores(cor_id, cores_globais(nome, codigo))')
+    .select(`
+      id, nome, sku, custo_producao, margem_producao, imagem, album_fotos,
+      product_cores(cor_id, cores_globais(nome, codigo)),
+      peso_kg, embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
+      materiais_globais(nome)
+    `)
     .order('nome')
 
   // Só o repasse já calculado sai daqui — custo_producao/margem_producao nunca vão pro cliente.
-  const products = (rows ?? []).map(p => ({
-    id: p.id,
-    nome: p.nome,
-    sku: p.sku,
-    repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
-    cores: (p.product_cores ?? []).flatMap(pc => {
-      const cor = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
-      return cor ? [{ nome: cor.nome, codigo: cor.codigo }] : []
-    }),
-    midias: [
-      ...(p.imagem ? [{ label: 'Foto de capa', url: p.imagem }] : []),
-      ...(p.album_fotos ? [{ label: 'Álbum de fotos e vídeos', url: p.album_fotos }] : []),
-    ],
-  }))
+  const products = (rows ?? []).map(p => {
+    const material = Array.isArray(p.materiais_globais) ? p.materiais_globais[0] : p.materiais_globais
+    return {
+      id: p.id,
+      nome: p.nome,
+      sku: p.sku,
+      repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
+      cores: (p.product_cores ?? []).flatMap(pc => {
+        const cor = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
+        return cor ? [{ nome: cor.nome, codigo: cor.codigo }] : []
+      }),
+      midias: [
+        ...(p.imagem ? [{ label: 'Foto de capa', url: p.imagem }] : []),
+        ...(p.album_fotos ? [{ label: 'Álbum de fotos e vídeos', url: p.album_fotos }] : []),
+      ],
+      fichaTecnica: {
+        material: material?.nome ?? null,
+        pesoKg: p.peso_kg,
+        comprimento: p.embalagem_comprimento_cm,
+        largura: p.embalagem_largura_cm,
+        altura: p.embalagem_altura_cm,
+      },
+    }
+  })
 
   return (
     <div style={{ padding: '28px 32px', flex: 1 }}>
