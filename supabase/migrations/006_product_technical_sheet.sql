@@ -20,3 +20,4 @@ create policy "materiais_select_auth" on public.materiais_globais
   for select to authenticated using (true);
 
 GRANT SELECT ON public.materiais_globais TO authenticated;
+GRANT ALL ON public.materiais_globais TO service_role;
