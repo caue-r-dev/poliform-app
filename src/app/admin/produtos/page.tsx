@@ -4,7 +4,7 @@ import ProdutosView from '@/components/admin/produtos/ProdutosView'
 export const dynamic = 'force-dynamic'
 
 export default async function ProdutosPage() {
-  const [{ data: products }, { data: marketplaces }, { data: coresGlobais }] = await Promise.all([
+  const [{ data: products }, { data: marketplaces }, { data: coresGlobais }, { data: materiaisGlobais }] = await Promise.all([
     adminClient
       .from('products')
       .select(`
@@ -19,6 +19,10 @@ export default async function ProdutosPage() {
       .order('nome'),
     adminClient
       .from('cores_globais')
+      .select('*')
+      .order('nome'),
+    adminClient
+      .from('materiais_globais')
       .select('*')
       .order('nome'),
   ])
@@ -49,6 +53,7 @@ export default async function ProdutosPage() {
           products={products ?? []}
           marketplaces={marketplaces ?? []}
           coresGlobais={coresGlobais ?? []}
+          materiaisGlobais={materiaisGlobais ?? []}
         />
       </div>
     </>
