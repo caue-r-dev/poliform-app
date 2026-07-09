@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { calcCustoUnitario, marketplaceCalc, type MarketplaceWithTiers } from '@/lib/calc'
 import { upsertProduct, deleteProduct, type ProductFormData } from '@/app/actions/products'
 import { addCorGlobal, removeCorGlobal, toggleProductColor } from '@/app/actions/cores'
+import { addMaterialGlobal, removeMaterialGlobal } from '@/app/actions/materiais'
 
 type CorGlobal = { id: string; nome: string; codigo: string }
 
@@ -22,7 +23,14 @@ type Product = {
   album_fotos: string | null
   marketplace_tiers: MarketplaceWithTiers | null
   product_cores: ProductCore[]
+  material_id: string | null
+  peso_kg: number | null
+  embalagem_comprimento_cm: number | null
+  embalagem_largura_cm: number | null
+  embalagem_altura_cm: number | null
 }
+
+type MaterialGlobal = { id: string; nome: string }
 
 const fmtBRL = (n: number | null) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -53,16 +61,20 @@ const EMPTY_FORM: ProductFormData = {
   custo_producao: 0, margem_producao: 0,
   valor_medio: null, marketplace_id: null,
   imagem: '', album_fotos: '',
+  material_id: null, peso_kg: null,
+  embalagem_comprimento_cm: null, embalagem_largura_cm: null, embalagem_altura_cm: null,
 }
 
 export default function ProdutosView({
   products,
   marketplaces,
   coresGlobais,
+  materiaisGlobais,
 }: {
   products: Product[]
   marketplaces: MarketplaceWithTiers[]
   coresGlobais: CorGlobal[]
+  materiaisGlobais: MaterialGlobal[]
 }) {
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [form, setForm] = useState<ProductFormData>(EMPTY_FORM)
@@ -76,6 +88,11 @@ export default function ProdutosView({
   const [corError, setCorError] = useState('')
   const [corSaving, setCorSaving] = useState(false)
 
+  // Materiais globais form
+  const [materialNome, setMaterialNome] = useState('')
+  const [materialError, setMaterialError] = useState('')
+  const [materialSaving, setMaterialSaving] = useState(false)
+
   const custo = calcCustoUnitario(form.custo_producao, form.margem_producao)
   const mkt = marketplaces.find(m => m.id === form.marketplace_id) ?? null
   const calc = custo != null ? marketplaceCalc(custo, mkt, form.valor_medio) : null
@@ -88,6 +105,10 @@ export default function ProdutosView({
       custo_producao: p.custo_producao, margem_producao: p.margem_producao,
       valor_medio: p.valor_medio, marketplace_id: p.marketplace_id,
       imagem: p.imagem ?? '', album_fotos: p.album_fotos ?? '',
+      material_id: p.material_id, peso_kg: p.peso_kg,
+      embalagem_comprimento_cm: p.embalagem_comprimento_cm,
+      embalagem_largura_cm: p.embalagem_largura_cm,
+      embalagem_altura_cm: p.embalagem_altura_cm,
     })
     setEditingId(p.id)
     setFormError('')
@@ -130,6 +151,20 @@ export default function ProdutosView({
 
   async function handleToggleColor(productId: string, corId: string) {
     await toggleProductColor(productId, corId)
+  }
+
+  async function handleAddMaterial(e: React.FormEvent) {
+    e.preventDefault()
+    setMaterialSaving(true); setMaterialError('')
+    const res = await addMaterialGlobal(materialNome)
+    setMaterialSaving(false)
+    if (res.error) { setMaterialError(res.error); return }
+    setMaterialNome('')
+  }
+
+  async function handleRemoveMaterial(id: string, nome: string) {
+    if (!confirm(`Remover material "${nome}"? Produtos vinculados ficam sem material.`)) return
+    await removeMaterialGlobal(id)
   }
 
   return (
@@ -186,6 +221,57 @@ export default function ProdutosView({
               {corSaving ? '…' : '+ Adicionar cor'}
             </button>
             {corError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{corError}</p>}
+          </form>
+        </div>
+      </div>
+
+      {/* ---- MATERIAIS GLOBAIS ---- */}
+      <div style={{
+        background: '#fff', border: '1px solid var(--line)',
+        borderRadius: 'var(--radius)', marginBottom: 22,
+        boxShadow: 'var(--shadow)', overflow: 'hidden',
+      }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
+            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
+            Materiais Globais
+          </h2>
+          <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 600 }}>
+            Registro reutilizável entre produtos. Cada produto vincula um único material.
+          </p>
+        </div>
+        <div style={{ padding: 20 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+            {materiaisGlobais.length === 0 && (
+              <span className="helper" style={{ margin: 0 }}>Nenhum material cadastrado ainda.</span>
+            )}
+            {materiaisGlobais.map(m => (
+              <span key={m.id} style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: '#fff', border: '1.5px solid var(--line)', borderRadius: 20,
+                padding: '5px 6px 5px 12px', fontSize: 12.5, fontWeight: 700,
+              }}>
+                {m.nome}
+                <button
+                  onClick={() => handleRemoveMaterial(m.id, m.nome)}
+                  style={{
+                    border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
+                    borderRadius: '50%', width: 18, height: 18, fontSize: 12,
+                    fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
+                  }}
+                >×</button>
+              </span>
+            ))}
+          </div>
+          <form onSubmit={handleAddMaterial} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="field" style={{ minWidth: 180 }}>
+              <label>Nome do material</label>
+              <input value={materialNome} onChange={e => setMaterialNome(e.target.value)} placeholder="Ex: PLA" required />
+            </div>
+            <button type="submit" disabled={materialSaving} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }}>
+              {materialSaving ? '…' : '+ Adicionar material'}
+            </button>
+            {materialError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{materialError}</p>}
           </form>
         </div>
       </div>
@@ -273,6 +359,45 @@ export default function ProdutosView({
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Álbum de Fotos (URL)</label>
                 <input value={form.album_fotos} onChange={e => set('album_fotos', e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--line)' }}>
+              <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                Ficha Técnica
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+                <div className="field">
+                  <label>Material</label>
+                  <select value={form.material_id ?? ''} onChange={e => set('material_id', e.target.value || null)}>
+                    <option value="">Nenhum</option>
+                    {materiaisGlobais.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Peso (kg)</label>
+                  <input type="number" step="0.001" min="0"
+                    value={form.peso_kg ?? ''}
+                    onChange={e => set('peso_kg', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="field">
+                  <label>Embalagem — Comprimento (cm)</label>
+                  <input type="number" step="0.01" min="0"
+                    value={form.embalagem_comprimento_cm ?? ''}
+                    onChange={e => set('embalagem_comprimento_cm', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="field">
+                  <label>Embalagem — Largura (cm)</label>
+                  <input type="number" step="0.01" min="0"
+                    value={form.embalagem_largura_cm ?? ''}
+                    onChange={e => set('embalagem_largura_cm', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="field">
+                  <label>Embalagem — Altura (cm)</label>
+                  <input type="number" step="0.01" min="0"
+                    value={form.embalagem_altura_cm ?? ''}
+                    onChange={e => set('embalagem_altura_cm', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
               </div>
             </div>
 
