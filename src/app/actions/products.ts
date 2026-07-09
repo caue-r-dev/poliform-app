@@ -15,6 +15,11 @@ export type ProductFormData = {
   marketplace_id: string | null
   imagem: string
   album_fotos: string
+  material_id: string | null
+  peso_kg: number | null
+  embalagem_comprimento_cm: number | null
+  embalagem_largura_cm: number | null
+  embalagem_altura_cm: number | null
 }
 
 export async function upsertProduct(data: ProductFormData) {
@@ -31,6 +36,11 @@ export async function upsertProduct(data: ProductFormData) {
     marketplace_id: data.marketplace_id || null,
     imagem: data.imagem || null,
     album_fotos: data.album_fotos || null,
+    material_id: data.material_id || null,
+    peso_kg: data.peso_kg ?? null,
+    embalagem_comprimento_cm: data.embalagem_comprimento_cm ?? null,
+    embalagem_largura_cm: data.embalagem_largura_cm ?? null,
+    embalagem_altura_cm: data.embalagem_altura_cm ?? null,
   }
 
   if (data.id) {
