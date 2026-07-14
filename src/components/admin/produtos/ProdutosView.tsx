@@ -25,6 +25,8 @@ type Product = {
   product_cores: ProductCore[]
   material_id: string | null
   peso_kg: number | null
+  produto_comprimento_cm: number | null
+  produto_altura_cm: number | null
   embalagem_comprimento_cm: number | null
   embalagem_largura_cm: number | null
   embalagem_altura_cm: number | null
@@ -62,6 +64,7 @@ const EMPTY_FORM: ProductFormData = {
   valor_medio: null, marketplace_id: null,
   imagem: '', album_fotos: '',
   material_id: null, peso_kg: null,
+  produto_comprimento_cm: null, produto_altura_cm: null,
   embalagem_comprimento_cm: null, embalagem_largura_cm: null, embalagem_altura_cm: null,
 }
 
@@ -106,6 +109,7 @@ export default function ProdutosView({
       valor_medio: p.valor_medio, marketplace_id: p.marketplace_id,
       imagem: p.imagem ?? '', album_fotos: p.album_fotos ?? '',
       material_id: p.material_id, peso_kg: p.peso_kg,
+      produto_comprimento_cm: p.produto_comprimento_cm, produto_altura_cm: p.produto_altura_cm,
       embalagem_comprimento_cm: p.embalagem_comprimento_cm,
       embalagem_largura_cm: p.embalagem_largura_cm,
       embalagem_altura_cm: p.embalagem_altura_cm,
@@ -379,6 +383,18 @@ export default function ProdutosView({
                   <input type="number" step="0.001" min="0"
                     value={form.peso_kg ?? ''}
                     onChange={e => set('peso_kg', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="field">
+                  <label>Produto — Comprimento (cm)</label>
+                  <input type="number" step="0.01" min="0"
+                    value={form.produto_comprimento_cm ?? ''}
+                    onChange={e => set('produto_comprimento_cm', e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="field">
+                  <label>Produto — Altura (cm)</label>
+                  <input type="number" step="0.01" min="0"
+                    value={form.produto_altura_cm ?? ''}
+                    onChange={e => set('produto_altura_cm', e.target.value ? parseFloat(e.target.value) : null)} />
                 </div>
                 <div className="field">
                   <label>Embalagem — Comprimento (cm)</label>
