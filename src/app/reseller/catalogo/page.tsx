@@ -29,13 +29,13 @@ export default async function CatalogoPage() {
       id: p.id,
       nome: p.nome,
       sku: p.sku,
+      imagem: p.imagem,
       repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
       cores: (p.product_cores ?? []).flatMap(pc => {
         const cor = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
         return cor ? [{ nome: cor.nome, codigo: cor.codigo }] : []
       }),
       midias: [
-        ...(p.imagem ? [{ label: 'Foto de capa', url: p.imagem }] : []),
         ...(p.album_fotos ? [{ label: 'Álbum de fotos e vídeos', url: p.album_fotos }] : []),
       ],
       fichaTecnica: {

@@ -17,6 +17,7 @@ type Product = {
   id: string
   nome: string
   sku: string
+  imagem: string | null
   repasse: number | null
   cores: CorEntry[]
   midias: Midia[]
@@ -25,6 +26,25 @@ type Product = {
 
 const fmtBRL = (n: number | null) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+function ImgThumb({ src, alt, size }: { src: string | null; alt: string; size: number }) {
+  const [broken, setBroken] = useState(false)
+  if (!src || broken) {
+    return (
+      <span style={{
+        display: 'inline-block', width: size, height: size, borderRadius: 7,
+        background: 'var(--paper)', border: '1px dashed var(--line)',
+        marginRight: 8, verticalAlign: 'middle',
+      }} />
+    )
+  }
+  return (
+    <img
+      src={src} alt={alt} onError={() => setBroken(true)}
+      style={{ width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '1px solid var(--line)', marginRight: 8, verticalAlign: 'middle' }}
+    />
+  )
+}
 
 export default function CatalogoResellerView({ products }: { products: Product[] }) {
   const [expandedColorsId, setExpandedColorsId] = useState<string | null>(null)
@@ -81,7 +101,10 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
               return [
                 <tr key={p.id}>
-                  <td style={{ fontWeight: 800 }}>{p.nome}</td>
+                  <td style={{ fontWeight: 800 }}>
+                    <ImgThumb src={p.imagem} alt={p.nome} size={34} />
+                    {p.nome}
+                  </td>
                   <td><span className="tag tag-muted">{p.sku}</span></td>
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(p.repasse)}</td>
                   <td>
