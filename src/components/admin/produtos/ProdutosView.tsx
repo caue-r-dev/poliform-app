@@ -5,6 +5,7 @@ import { calcCustoUnitario, marketplaceCalc, type MarketplaceWithTiers } from '@
 import { upsertProduct, deleteProduct, type ProductFormData } from '@/app/actions/products'
 import { addCorGlobal, removeCorGlobal, toggleProductColor } from '@/app/actions/cores'
 import { addMaterialGlobal, removeMaterialGlobal } from '@/app/actions/materiais'
+import { compressImage } from '@/lib/compressImage'
 
 type CorGlobal = { id: string; nome: string; codigo: string }
 
@@ -83,6 +84,8 @@ export default function ProdutosView({
   const [form, setForm] = useState<ProductFormData>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [expandedColorId, setExpandedColorId] = useState<string | null>(null)
 
   // Cores globais form
@@ -123,6 +126,31 @@ export default function ProdutosView({
   const set = useCallback(<K extends keyof ProductFormData>(key: K, val: ProductFormData[K]) => {
     setForm(f => ({ ...f, [key]: val }))
   }, [])
+
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setUploadError('')
+    setUploadingImage(true)
+    try {
+      const compressed = await compressImage(file)
+      const body = new FormData()
+      body.append('file', compressed, 'cover.jpg')
+      body.append('productId', form.id ?? crypto.randomUUID())
+
+      const res = await fetch('/api/admin/products/upload-image', { method: 'POST', body })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Falha no upload.')
+
+      set('imagem', json.url as string)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Falha no upload.')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -354,11 +382,13 @@ export default function ProdutosView({
               </div>
 
               <div className="field" style={{ gridColumn: 'span 2' }}>
-                <label>Foto de Capa (URL)</label>
+                <label>Foto de Capa</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input value={form.imagem} onChange={e => set('imagem', e.target.value)} placeholder="https://..." style={{ flex: 1 }} />
+                  <input type="file" accept="image/*" onChange={handleImageSelect} disabled={uploadingImage} style={{ flex: 1 }} />
                   <ImgThumb src={form.imagem || null} alt="Prévia" size={38} />
                 </div>
+                {uploadingImage && <p style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '4px 0 0' }}>Enviando…</p>}
+                {uploadError && <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>{uploadError}</p>}
               </div>
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Álbum de Fotos (URL)</label>
