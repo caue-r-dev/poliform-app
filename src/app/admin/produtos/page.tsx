@@ -1,5 +1,6 @@
 import { adminClient } from '@/lib/supabase/admin'
 import ProdutosView from '@/components/admin/produtos/ProdutosView'
+import { compareSku } from '@/lib/sortBySku'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,8 @@ export default async function ProdutosPage() {
       .order('nome'),
   ])
 
+  const sortedProducts = [...(products ?? [])].sort((a, b) => compareSku(a.sku, b.sku))
+
   return (
     <>
       <div style={{
@@ -50,7 +53,7 @@ export default async function ProdutosPage() {
       </div>
       <div style={{ padding: '28px 32px', flex: 1 }}>
         <ProdutosView
-          products={products ?? []}
+          products={sortedProducts}
           marketplaces={marketplaces ?? []}
           coresGlobais={coresGlobais ?? []}
           materiaisGlobais={materiaisGlobais ?? []}
