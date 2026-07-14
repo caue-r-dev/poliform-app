@@ -16,7 +16,8 @@ export default async function CatalogoPage() {
     .select(`
       id, nome, sku, custo_producao, margem_producao, imagem, album_fotos,
       product_cores(cor_id, cores_globais(nome, codigo)),
-      peso_kg, embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
+      peso_kg, produto_comprimento_cm, produto_altura_cm,
+      embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
       materiais_globais(nome)
     `)
     .order('nome')
@@ -40,6 +41,8 @@ export default async function CatalogoPage() {
       fichaTecnica: {
         material: material?.nome ?? null,
         pesoKg: p.peso_kg,
+        produtoComprimento: p.produto_comprimento_cm,
+        produtoAltura: p.produto_altura_cm,
         comprimento: p.embalagem_comprimento_cm,
         largura: p.embalagem_largura_cm,
         altura: p.embalagem_altura_cm,

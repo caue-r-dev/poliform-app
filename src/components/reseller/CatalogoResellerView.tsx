@@ -7,6 +7,8 @@ type Midia = { label: string; url: string }
 type FichaTecnica = {
   material: string | null
   pesoKg: number | null
+  produtoComprimento: number | null
+  produtoAltura: number | null
   comprimento: number | null
   largura: number | null
   altura: number | null
@@ -72,9 +74,10 @@ export default function CatalogoResellerView({ products }: { products: Product[]
               const colorsOpen = expandedColorsId === p.id
               const midiaOpen = expandedMidiaId === p.id
               const fichaOpen = expandedFichaId === p.id
-              const { material, pesoKg, comprimento, largura, altura } = p.fichaTecnica
+              const { material, pesoKg, produtoComprimento, produtoAltura, comprimento, largura, altura } = p.fichaTecnica
+              const temMedidasProduto = produtoComprimento != null && produtoAltura != null
               const temMedidas = comprimento != null && largura != null && altura != null
-              const fichaVazia = !material && pesoKg == null && !temMedidas
+              const fichaVazia = !material && pesoKg == null && !temMedidasProduto && !temMedidas
 
               return [
                 <tr key={p.id}>
@@ -166,6 +169,15 @@ export default function CatalogoResellerView({ products }: { products: Product[]
                             color: 'var(--ink-soft)',
                           }}>
                             Peso: {pesoKg} kg
+                          </span>
+                        )}
+                        {temMedidasProduto && (
+                          <span style={{
+                            fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
+                            borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
+                            color: 'var(--ink-soft)',
+                          }}>
+                            Produto: {produtoComprimento} x {produtoAltura} cm
                           </span>
                         )}
                         {temMedidas && (
