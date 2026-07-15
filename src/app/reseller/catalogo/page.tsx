@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { calcCustoUnitario } from '@/lib/calc'
 import CatalogoResellerView from '@/components/reseller/CatalogoResellerView'
+import { compareSku } from '@/lib/sortBySku'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +50,7 @@ export default async function CatalogoPage() {
       },
     }
   })
+  products.sort((a, b) => compareSku(a.sku, b.sku))
 
   return (
     <div style={{ padding: '28px 32px', flex: 1 }}>

@@ -32,16 +32,15 @@ function ImgThumb({ src, alt, size }: { src: string | null; alt: string; size: n
   if (!src || broken) {
     return (
       <span style={{
-        display: 'inline-block', width: size, height: size, borderRadius: 7,
+        flexShrink: 0, display: 'inline-block', width: size, height: size, borderRadius: 7,
         background: 'var(--paper)', border: '1px dashed var(--line)',
-        marginRight: 8, verticalAlign: 'middle',
       }} />
     )
   }
   return (
     <img
       src={src} alt={alt} onError={() => setBroken(true)}
-      style={{ width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '1px solid var(--line)', marginRight: 8, verticalAlign: 'middle' }}
+      style={{ flexShrink: 0, width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '1px solid var(--line)' }}
     />
   )
 }
@@ -102,8 +101,10 @@ export default function CatalogoResellerView({ products }: { products: Product[]
               return [
                 <tr key={p.id}>
                   <td style={{ fontWeight: 800 }}>
-                    <ImgThumb src={p.imagem} alt={p.nome} size={34} />
-                    {p.nome}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <ImgThumb src={p.imagem} alt={p.nome} size={34} />
+                      {p.nome}
+                    </div>
                   </td>
                   <td><span className="tag tag-muted">{p.sku}</span></td>
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(p.repasse)}</td>
