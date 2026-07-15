@@ -59,6 +59,13 @@ export async function upsertProduct(data: ProductFormData) {
   return { ok: true }
 }
 
+export async function updateProductImage(id: string, imagem: string) {
+  const { error } = await adminClient.from('products').update({ imagem }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/produtos')
+  return { ok: true }
+}
+
 export async function deleteProduct(id: string) {
   const { error } = await adminClient.from('products').delete().eq('id', id)
   if (error) return { error: error.message }

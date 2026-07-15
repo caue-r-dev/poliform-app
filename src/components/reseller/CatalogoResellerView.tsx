@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ProductNameCell } from '@/components/shared/ProductThumbnail'
 
 type CorEntry = { nome: string; codigo: string }
 type Midia = { label: string; url: string }
@@ -26,24 +27,6 @@ type Product = {
 
 const fmtBRL = (n: number | null) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-function ImgThumb({ src, alt, size }: { src: string | null; alt: string; size: number }) {
-  const [broken, setBroken] = useState(false)
-  if (!src || broken) {
-    return (
-      <span style={{
-        flexShrink: 0, display: 'inline-block', width: size, height: size, borderRadius: 7,
-        background: 'var(--paper)', border: '1px dashed var(--line)',
-      }} />
-    )
-  }
-  return (
-    <img
-      src={src} alt={alt} onError={() => setBroken(true)}
-      style={{ flexShrink: 0, width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '1px solid var(--line)' }}
-    />
-  )
-}
 
 export default function CatalogoResellerView({ products }: { products: Product[] }) {
   const [expandedColorsId, setExpandedColorsId] = useState<string | null>(null)
@@ -101,10 +84,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
               return [
                 <tr key={p.id}>
                   <td style={{ fontWeight: 800 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <ImgThumb src={p.imagem} alt={p.nome} size={34} />
-                      {p.nome}
-                    </div>
+                    <ProductNameCell src={p.imagem} nome={p.nome} />
                   </td>
                   <td><span className="tag tag-muted">{p.sku}</span></td>
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(p.repasse)}</td>

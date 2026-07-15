@@ -2,10 +2,11 @@
 
 import { useState, useCallback } from 'react'
 import { calcCustoUnitario, marketplaceCalc, type MarketplaceWithTiers } from '@/lib/calc'
-import { upsertProduct, deleteProduct, type ProductFormData } from '@/app/actions/products'
+import { upsertProduct, deleteProduct, updateProductImage, type ProductFormData } from '@/app/actions/products'
 import { addCorGlobal, removeCorGlobal, toggleProductColor } from '@/app/actions/cores'
 import { addMaterialGlobal, removeMaterialGlobal } from '@/app/actions/materiais'
 import { compressImage } from '@/lib/compressImage'
+import { ImgThumb, ProductNameCell } from '@/components/shared/ProductThumbnail'
 
 type CorGlobal = { id: string; nome: string; codigo: string }
 
@@ -39,25 +40,6 @@ const fmtBRL = (n: number | null) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtPct = (n: number | null) =>
   n == null ? '—' : `${Number(n).toFixed(1)}%`
-
-function ImgThumb({ src, alt, size }: { src: string | null; alt: string; size: number }) {
-  const [broken, setBroken] = useState(false)
-  if (!src || broken) {
-    return (
-      <span style={{
-        display: 'inline-block', width: size, height: size, borderRadius: 7,
-        background: 'var(--paper)', border: '1px dashed var(--line)',
-        marginRight: 8, verticalAlign: 'middle',
-      }} />
-    )
-  }
-  return (
-    <img
-      src={src} alt={alt} onError={() => setBroken(true)}
-      style={{ width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '1px solid var(--line)', marginRight: 8, verticalAlign: 'middle' }}
-    />
-  )
-}
 
 const EMPTY_FORM: ProductFormData = {
   nome: '', sku: '', ncm: '',
@@ -145,6 +127,13 @@ export default function ProdutosView({
       if (!res.ok) throw new Error(json.error ?? 'Falha no upload.')
 
       set('imagem', json.url as string)
+
+      // Produto já existente: persiste a imagem no banco imediatamente,
+      // sem depender do usuário clicar em "Salvar produto" depois.
+      if (form.id) {
+        const saveRes = await updateProductImage(form.id, json.url as string)
+        if (saveRes.error) throw new Error(saveRes.error)
+      }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Falha no upload.')
     } finally {
@@ -499,8 +488,7 @@ export default function ProdutosView({
                 return [
                   <tr key={p.id}>
                     <td style={{ fontWeight: 800 }}>
-                      <ImgThumb src={p.imagem} alt={p.nome} size={34} />
-                      {p.nome}
+                      <ProductNameCell src={p.imagem} nome={p.nome} />
                     </td>
                     <td><span className="tag tag-muted">{p.sku}</span></td>
                     <td>
