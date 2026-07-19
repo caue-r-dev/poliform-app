@@ -15,7 +15,7 @@ export default async function CatalogoPage() {
   const { data: rows } = await adminClient
     .from('products')
     .select(`
-      id, nome, sku, custo_producao, margem_producao, imagem, album_fotos,
+      id, nome, sku, ncm, custo_producao, margem_producao, imagem, album_fotos,
       product_cores(cor_id, cores_globais(nome, codigo)),
       peso_kg, produto_comprimento_cm, produto_altura_cm,
       embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
@@ -30,6 +30,7 @@ export default async function CatalogoPage() {
       id: p.id,
       nome: p.nome,
       sku: p.sku,
+      ncm: p.ncm,
       imagem: p.imagem,
       repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
       cores: (p.product_cores ?? []).flatMap(pc => {

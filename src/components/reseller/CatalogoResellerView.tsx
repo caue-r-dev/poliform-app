@@ -18,6 +18,7 @@ type Product = {
   id: string
   nome: string
   sku: string
+  ncm: string | null
   imagem: string | null
   repasse: number | null
   cores: CorEntry[]
@@ -60,6 +61,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
             <tr>
               <th>Produto</th>
               <th>SKU</th>
+              <th>NCM</th>
               <th>Valor</th>
               <th>Cores</th>
               <th>Fotos e vídeos</th>
@@ -69,7 +71,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
           <tbody>
             {products.length === 0 && (
               <tr className="empty-row">
-                <td colSpan={6}><span className="ast">✳</span>Nenhum produto disponível no momento.</td>
+                <td colSpan={7}><span className="ast">✳</span>Nenhum produto disponível no momento.</td>
               </tr>
             )}
             {products.map(p => {
@@ -87,6 +89,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
                     <ProductNameCell src={p.imagem} nome={p.nome} />
                   </td>
                   <td><span className="tag tag-muted">{p.sku}</span></td>
+                  <td>{p.ncm ?? '—'}</td>
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(p.repasse)}</td>
                   <td>
                     <button onClick={() => toggleColors(p.id)} className="btn btn-sm btn-ghost">
@@ -113,7 +116,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
                 colorsOpen && (
                   <tr key={`${p.id}-cores`} style={{ background: 'var(--paper)' }}>
-                    <td colSpan={6} style={{ padding: '14px 20px' }}>
+                    <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.cores.length > 0
                           ? p.cores.map(c => (
@@ -134,7 +137,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
                 midiaOpen && (
                   <tr key={`${p.id}-midia`} style={{ background: 'var(--paper)' }}>
-                    <td colSpan={6} style={{ padding: '14px 20px' }}>
+                    <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.midias.length > 0
                           ? p.midias.map(m => (
@@ -155,7 +158,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
 
                 fichaOpen && !fichaVazia && (
                   <tr key={`${p.id}-ficha`} style={{ background: 'var(--paper)' }}>
-                    <td colSpan={6} style={{ padding: '14px 20px' }}>
+                    <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {material && (
                           <span style={{
