@@ -26,10 +26,13 @@ type Product = {
   fichaTecnica: FichaTecnica
 }
 
+type KitItemEntry = { nome: string; sku: string; quantidade: number }
+type Kit = { id: string; sku: string; nome: string; valor: number; itens: KitItemEntry[] }
+
 const fmtBRL = (n: number | null) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export default function CatalogoResellerView({ products }: { products: Product[] }) {
+export default function CatalogoResellerView({ products, kits }: { products: Product[]; kits: Kit[] }) {
   const [expandedColorsId, setExpandedColorsId] = useState<string | null>(null)
   const [expandedMidiaId, setExpandedMidiaId] = useState<string | null>(null)
   const [expandedFichaId, setExpandedFichaId] = useState<string | null>(null)
@@ -51,6 +54,7 @@ export default function CatalogoResellerView({ products }: { products: Product[]
   }
 
   return (
+    <>
     <div style={{
       background: '#fff', border: '1px solid var(--line)',
       borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
@@ -206,5 +210,54 @@ export default function CatalogoResellerView({ products }: { products: Product[]
         </table>
       </div>
     </div>
+
+    {kits.length > 0 && (
+      <div style={{
+        background: '#fff', border: '1px solid var(--line)',
+        borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+        marginTop: 22,
+      }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
+            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
+            Kits disponíveis
+          </h2>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Kit</th>
+                <th>SKU</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kits.map(kit => (
+                <tr key={kit.id}>
+                  <td style={{ fontWeight: 800 }}>
+                    {kit.nome}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                      {kit.itens.map((it, i) => (
+                        <span key={i} style={{
+                          fontSize: 11.5, fontWeight: 700, padding: '3px 9px',
+                          borderRadius: 20, background: 'var(--paper)', border: '1px solid var(--line)',
+                          color: 'var(--ink-soft)',
+                        }}>
+                          {it.quantidade}× {it.nome}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td><span className="tag tag-muted">{kit.sku}</span></td>
+                  <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(kit.valor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

@@ -8,6 +8,8 @@ const NAV = [
   { href: '/admin',             label: 'Painel',        icon: '▦' },
   { href: '/admin/produtos',    label: 'Produtos',      icon: '◉' },
   { href: '/admin/marketplaces',label: 'Marketplaces',  icon: '◈' },
+  { href: '/admin/kits',        label: 'Kits',          icon: '⊞' },
+  { href: '/admin/kits-revendedores', label: 'Kits dos Revendedores', icon: '⊟' },
   { href: '/admin/revendedores',label: 'Revendedores',  icon: '◎' },
   { href: '/admin/vendas',      label: 'Vendas',        icon: '⊕' },
   { href: '/admin/etiquetas',   label: 'Etiquetas',     icon: '◫' },
@@ -37,7 +39,7 @@ export default function Sidebar() {
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {NAV.map(({ href, label, icon }) => {
-          const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
+          const active = href === '/admin' ? pathname === '/admin' : (pathname === href || pathname.startsWith(href + '/'))
           return (
             <Link
               key={href}

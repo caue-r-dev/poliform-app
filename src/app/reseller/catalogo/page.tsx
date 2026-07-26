@@ -12,16 +12,22 @@ export default async function CatalogoPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: rows } = await adminClient
-    .from('products')
-    .select(`
-      id, nome, sku, ncm, custo_producao, margem_producao, imagem, album_fotos,
-      product_cores(cor_id, cores_globais(nome, codigo)),
-      peso_kg, produto_comprimento_cm, produto_altura_cm,
-      embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
-      materiais_globais(nome)
-    `)
-    .order('nome')
+  const [{ data: rows }, { data: kitRows }] = await Promise.all([
+    adminClient
+      .from('products')
+      .select(`
+        id, nome, sku, ncm, custo_producao, margem_producao, imagem, album_fotos,
+        product_cores(cor_id, cores_globais(nome, codigo)),
+        peso_kg, produto_comprimento_cm, produto_altura_cm,
+        embalagem_comprimento_cm, embalagem_largura_cm, embalagem_altura_cm,
+        materiais_globais(nome)
+      `)
+      .order('nome'),
+    adminClient
+      .from('kits')
+      .select('id, sku, nome, preco_repasse, kit_items(quantidade, products(nome, sku))')
+      .is('reseller_id', null),
+  ])
 
   // Só o repasse já calculado sai daqui — custo_producao/margem_producao nunca vão pro cliente.
   const products = (rows ?? []).map(p => {
@@ -53,6 +59,19 @@ export default async function CatalogoPage() {
   })
   products.sort((a, b) => compareSku(a.sku, b.sku))
 
+  // Kits também mostram só o preço de repasse já definido — sem cálculo, é valor fechado do combo.
+  const kits = (kitRows ?? []).map(k => ({
+    id: k.id,
+    sku: k.sku,
+    nome: k.nome,
+    valor: k.preco_repasse,
+    itens: (k.kit_items ?? []).flatMap(item => {
+      const prod = Array.isArray(item.products) ? item.products[0] : item.products
+      return prod ? [{ nome: prod.nome, sku: prod.sku, quantidade: item.quantidade }] : []
+    }),
+  }))
+  kits.sort((a, b) => compareSku(a.sku, b.sku))
+
   return (
     <div style={{ padding: '28px 32px', flex: 1 }}>
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -72,7 +91,7 @@ export default async function CatalogoPage() {
         </a>
       </div>
 
-      <CatalogoResellerView products={products} />
+      <CatalogoResellerView products={products} kits={kits} />
     </div>
   )
 }

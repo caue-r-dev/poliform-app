@@ -5,7 +5,7 @@ import { compareSku } from '@/lib/sortBySku'
 export const dynamic = 'force-dynamic'
 
 export default async function ProdutosPage() {
-  const [{ data: products }, { data: marketplaces }, { data: coresGlobais }, { data: materiaisGlobais }] = await Promise.all([
+  const [{ data: products }, { data: marketplaces }, { data: coresGlobais }, { data: materiaisGlobais }, { data: kitsMesmoProduto }] = await Promise.all([
     adminClient
       .from('products')
       .select(`
@@ -26,9 +26,24 @@ export default async function ProdutosPage() {
       .from('materiais_globais')
       .select('*')
       .order('nome'),
+    adminClient
+      .from('kits')
+      .select('id, sku, nome, preco_repasse, kit_items(product_id, quantidade)')
+      .eq('tipo', 'mesmo_produto'),
   ])
 
   const sortedProducts = [...(products ?? [])].sort((a, b) => compareSku(a.sku, b.sku))
+
+  // Kit do mesmo produto sempre tem exatamente 1 kit_item → agrupa por product_id
+  const kitsByProductId = new Map<string, { id: string; sku: string; nome: string; preco_repasse: number; quantidade: number }[]>()
+  for (const kit of kitsMesmoProduto ?? []) {
+    const item = kit.kit_items[0]
+    if (!item) continue
+    const list = kitsByProductId.get(item.product_id) ?? []
+    list.push({ id: kit.id, sku: kit.sku, nome: kit.nome, preco_repasse: kit.preco_repasse, quantidade: item.quantidade })
+    kitsByProductId.set(item.product_id, list)
+  }
+  const productsWithKits = sortedProducts.map(p => ({ ...p, kits: kitsByProductId.get(p.id) ?? [] }))
 
   return (
     <>
@@ -53,7 +68,7 @@ export default async function ProdutosPage() {
       </div>
       <div style={{ padding: '28px 32px', flex: 1 }}>
         <ProdutosView
-          products={sortedProducts}
+          products={productsWithKits}
           marketplaces={marketplaces ?? []}
           coresGlobais={coresGlobais ?? []}
           materiaisGlobais={materiaisGlobais ?? []}

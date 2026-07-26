@@ -5,12 +5,15 @@ import { calcCustoUnitario, marketplaceCalc, type MarketplaceWithTiers } from '@
 import { upsertProduct, deleteProduct, updateProductImage, type ProductFormData } from '@/app/actions/products'
 import { addCorGlobal, removeCorGlobal, toggleProductColor } from '@/app/actions/cores'
 import { addMaterialGlobal, removeMaterialGlobal } from '@/app/actions/materiais'
+import { createKitMesmoProduto, deleteKit } from '@/app/actions/kits'
 import { compressImage } from '@/lib/compressImage'
 import { ImgThumb, ProductNameCell } from '@/components/shared/ProductThumbnail'
 
 type CorGlobal = { id: string; nome: string; codigo: string }
 
 type ProductCore = { cor_id: string; cores_globais: CorGlobal }
+
+type ProductKit = { id: string; sku: string; nome: string; preco_repasse: number; quantidade: number }
 
 type Product = {
   id: string
@@ -32,6 +35,7 @@ type Product = {
   embalagem_comprimento_cm: number | null
   embalagem_largura_cm: number | null
   embalagem_altura_cm: number | null
+  kits: ProductKit[]
 }
 
 type MaterialGlobal = { id: string; nome: string }
@@ -69,6 +73,13 @@ export default function ProdutosView({
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [expandedColorId, setExpandedColorId] = useState<string | null>(null)
+  const [expandedKitId, setExpandedKitId] = useState<string | null>(null)
+
+  // Kit do mesmo produto — form (painel expandido por produto)
+  const [kitQtd, setKitQtd] = useState('')
+  const [kitPreco, setKitPreco] = useState('')
+  const [kitError, setKitError] = useState('')
+  const [kitSaving, setKitSaving] = useState(false)
 
   // Cores globais form
   const [corNome, setCorNome] = useState('')
@@ -186,6 +197,25 @@ export default function ProdutosView({
   async function handleRemoveMaterial(id: string, nome: string) {
     if (!confirm(`Remover material "${nome}"? Produtos vinculados ficam sem material.`)) return
     await removeMaterialGlobal(id)
+  }
+
+  function toggleKitPanel(productId: string) {
+    setExpandedKitId(v => (v === productId ? null : productId))
+    setKitQtd(''); setKitPreco(''); setKitError('')
+  }
+
+  async function handleAddKit(e: React.FormEvent, productId: string) {
+    e.preventDefault()
+    setKitSaving(true); setKitError('')
+    const res = await createKitMesmoProduto(productId, parseInt(kitQtd, 10), parseFloat(kitPreco))
+    setKitSaving(false)
+    if (res.error) { setKitError(res.error); return }
+    setKitQtd(''); setKitPreco('')
+  }
+
+  async function handleRemoveKit(id: string, nome: string) {
+    if (!confirm(`Remover "${nome}"?`)) return
+    await deleteKit(id)
   }
 
   return (
@@ -465,6 +495,7 @@ export default function ProdutosView({
                 <th>Produto</th>
                 <th>SKU</th>
                 <th>Cores</th>
+                <th>Kits</th>
                 <th>Repasse</th>
                 <th>Marketplace</th>
                 <th>Valor Médio</th>
@@ -476,7 +507,7 @@ export default function ProdutosView({
             <tbody>
               {products.length === 0 && (
                 <tr className="empty-row">
-                  <td colSpan={9}><span className="ast">✳</span>Nenhum produto cadastrado.</td>
+                  <td colSpan={10}><span className="ast">✳</span>Nenhum produto cadastrado.</td>
                 </tr>
               )}
               {products.map(p => {
@@ -484,6 +515,7 @@ export default function ProdutosView({
                 const r = c != null ? marketplaceCalc(c, p.marketplace_tiers, p.valor_medio) : null
                 const linkedCorIds = new Set(p.product_cores.map(pc => pc.cor_id))
                 const isExpanded = expandedColorId === p.id
+                const isKitExpanded = expandedKitId === p.id
 
                 return [
                   <tr key={p.id}>
@@ -498,6 +530,15 @@ export default function ProdutosView({
                         style={{ fontSize: 11.5 }}
                       >
                         {linkedCorIds.size} cor{linkedCorIds.size !== 1 ? 'es' : ''} {isExpanded ? '▲' : '▼'}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => toggleKitPanel(p.id)}
+                        className="btn btn-sm btn-ghost"
+                        style={{ fontSize: 11.5 }}
+                      >
+                        {p.kits.length} kit{p.kits.length !== 1 ? 's' : ''} {isKitExpanded ? '▲' : '▼'}
                       </button>
                     </td>
                     <td className="mono">{fmtBRL(c)}</td>
@@ -518,7 +559,7 @@ export default function ProdutosView({
                   // Painel de cores expandível
                   isExpanded && (
                     <tr key={`${p.id}-cores`} style={{ background: 'var(--paper)' }}>
-                      <td colSpan={9} style={{ padding: '16px 20px' }}>
+                      <td colSpan={10} style={{ padding: '16px 20px' }}>
                         <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                           Cores vinculadas a {p.nome} — SKU filho = {p.sku}.<em>código</em>
                         </p>
@@ -547,6 +588,55 @@ export default function ProdutosView({
                             )
                           })}
                         </div>
+                      </td>
+                    </tr>
+                  ),
+
+                  // Painel de kits do mesmo produto, expandível
+                  isKitExpanded && (
+                    <tr key={`${p.id}-kits`} style={{ background: 'var(--paper)' }}>
+                      <td colSpan={10} style={{ padding: '16px 20px' }}>
+                        <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                          Kits de {p.nome} — SKU = {p.sku}.KIT<em>qtd</em>
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                          {p.kits.length === 0 && (
+                            <span className="helper" style={{ margin: 0 }}>Nenhum kit cadastrado para este produto.</span>
+                          )}
+                          {p.kits.map(kit => (
+                            <span key={kit.id} style={{
+                              display: 'flex', alignItems: 'center', gap: 8,
+                              background: '#fff', border: '1.5px solid var(--line)', borderRadius: 20,
+                              padding: '5px 6px 5px 12px', fontSize: 12.5, fontWeight: 700,
+                            }}>
+                              {kit.nome}
+                              <span style={{ color: 'var(--ink-soft)', fontWeight: 700 }}>· {kit.sku}</span>
+                              <span style={{ color: 'var(--brand-dark)', fontWeight: 800 }}>· {fmtBRL(kit.preco_repasse)}</span>
+                              <button
+                                onClick={() => handleRemoveKit(kit.id, kit.nome)}
+                                style={{
+                                  border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
+                                  borderRadius: '50%', width: 18, height: 18, fontSize: 12,
+                                  fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
+                                }}
+                              >×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <form onSubmit={e => handleAddKit(e, p.id)} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                          <div className="field" style={{ minWidth: 120 }}>
+                            <label>Quantidade</label>
+                            <input type="number" min="1" step="1" value={kitQtd} onChange={e => setKitQtd(e.target.value)} required />
+                          </div>
+                          <div className="field" style={{ minWidth: 160 }}>
+                            <label>Preço de Repasse (R$)</label>
+                            <input type="number" min="0" step="0.01" value={kitPreco} onChange={e => setKitPreco(e.target.value)} required />
+                          </div>
+                          <button type="submit" disabled={kitSaving} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }}>
+                            {kitSaving ? '…' : '+ Adicionar kit'}
+                          </button>
+                          {kitError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{kitError}</p>}
+                        </form>
                       </td>
                     </tr>
                   ),
