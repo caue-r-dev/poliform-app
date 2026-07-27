@@ -82,6 +82,17 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
 
       // PDF com mais de 1 página = mais de uma etiqueta/pedido no mesmo arquivo.
       if (isPDF) {
+        if (json.pdfParseError) {
+          // Leitura do PDF falhou (não é "SKU não encontrado") — item continua confirmável,
+          // mas com seleção manual obrigatória e mensagem que deixa a causa clara.
+          updateItem(localId, {
+            storagePath: json.path,
+            productId: '', corId: null, qtd: 1, matched: false,
+            status: 'pronto', totalPages: 1,
+            error: 'Falha ao ler o PDF — selecione o produto manualmente.',
+          })
+          return
+        }
         const pageTexts: string[] = json.pageTexts ?? []
         const totalPages = pageTexts.length || 1
 
@@ -269,7 +280,9 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                         {it.status === 'lendo' && <span className="tag tag-muted">Lendo…</span>}
                         {it.status === 'erro' && <span className="tag" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>{it.error}</span>}
                         {it.status === 'pronto' && it.matched && <span className="tag">SKU identificado</span>}
-                        {it.status === 'pronto' && !it.matched && <span className="tag tag-warn">Confirme manualmente</span>}
+                        {it.status === 'pronto' && !it.matched && (
+                          <span className="tag tag-warn">{it.error ?? 'Confirme manualmente'}</span>
+                        )}
                       </td>
                       <td>
                         <button onClick={() => removeItem(it.localId)} className="btn btn-sm btn-danger-ghost">Remover</button>

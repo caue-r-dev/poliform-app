@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
 
   // Extrai texto por página do PDF — cada página do PDF é uma etiqueta/pedido distinto.
   let pageTexts: string[] = []
+  let pdfParseError: string | null = null
   if (isPDF) {
     try {
       const { PDFParse } = await import('pdf-parse')
@@ -38,8 +39,10 @@ export async function POST(req: NextRequest) {
       pageTexts = result.pages.map(p => p.text)
       await parser.destroy()
     } catch (err) {
-      // Falha na extração não pode derrubar o upload — revendedor identifica manualmente.
+      // Falha na extração não pode derrubar o upload — revendedor identifica manualmente,
+      // mas o front precisa saber que a leitura falhou (não engolir o erro).
       console.error('pdf-parse falhou:', err)
+      pdfParseError = err instanceof Error ? err.message : 'Falha ao ler o PDF.'
     }
   }
 
@@ -53,5 +56,6 @@ export async function POST(req: NextRequest) {
     path: storagePath,
     isPDF,
     pageTexts,
+    pdfParseError,
   })
 }
