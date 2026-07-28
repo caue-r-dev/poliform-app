@@ -18,7 +18,7 @@ type Etiqueta = {
 }
 
 type ProductCor = { corId: string; nome: string; codigo: string }
-type Product = { id: string; nome: string; sku: string; cores: ProductCor[] }
+type Product = { id: string; nome: string; sku: string; valorUnitario: number | null; cores: ProductCor[] }
 
 type QueueItem = {
   localId: string
@@ -33,9 +33,11 @@ type QueueItem = {
   error?: string
   page: number | null
   totalPages: number | null
+  uploadBatchId: string
 }
 
 const fmtDT = (s: string) => new Date(s).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const fmtBRL = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const uid = () => Math.random().toString(36).slice(2)
 
 export default function EtiquetasResellerView({ etiquetas, knownSkus, products }: {
@@ -57,12 +59,13 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
 
     for (const file of files) {
       const localId = uid()
+      const uploadBatchId = crypto.randomUUID()
       const isPDF = file.type === 'application/pdf'
       const previewUrl = isPDF ? null : URL.createObjectURL(file)
       const item: QueueItem = {
         localId, file, previewUrl, storagePath: null,
         productId: '', corId: null, qtd: 1, status: 'lendo', matched: false,
-        page: null, totalPages: null,
+        page: null, totalPages: null, uploadBatchId,
       }
       setQueue(q => [...q, item])
       processFile(localId, file, isPDF)
@@ -185,6 +188,7 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
         product_id: it.productId,
         cor_id: it.corId,
         qtd: it.qtd,
+        upload_batch_id: it.uploadBatchId,
       })
     }
     setQueue(q => q.filter(it => !ready.some(r => r.localId === it.localId)))
@@ -199,6 +203,14 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
   }
 
   const pendingCount = queue.filter(it => it.status === 'pronto').length
+
+  // Total do pedido — soma valorUnitario (repasse) × qtd só dos itens com produto selecionado.
+  // Preparação pro sistema de saldo/crédito: só exibição, nenhum débito é feito aqui.
+  const identifiedItems = queue.filter(it => it.productId)
+  const orderTotal = identifiedItems.reduce((sum, it) => {
+    const product = products.find(p => p.id === it.productId)
+    return sum + (product?.valorUnitario ?? 0) * it.qtd
+  }, 0)
 
   return (
     <>
@@ -292,6 +304,16 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                 })}
               </tbody>
             </table>
+            <div style={{ padding: '12px 14px 0' }}>
+              <span style={{ fontSize: 13, fontWeight: 800 }}>
+                Valor total do pedido: <span style={{ color: 'var(--brand-dark)' }}>{fmtBRL(orderTotal)}</span>
+                {identifiedItems.length < queue.length && (
+                  <span style={{ fontWeight: 700, color: 'var(--ink-soft)' }}>
+                    {' '}({identifiedItems.length} de {queue.length} itens identificados)
+                  </span>
+                )}
+              </span>
+            </div>
             <div style={{ padding: 14, display: 'flex', gap: 8 }}>
               <button onClick={handleConfirm} disabled={confirming || pendingCount === 0} className="btn btn-primary">
                 {confirming ? 'Confirmando…' : `Confirmar ${pendingCount || ''} etiqueta${pendingCount === 1 ? '' : 's'}`}

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import EtiquetasResellerView from '@/components/reseller/EtiquetasResellerView'
+import { calcCustoUnitario } from '@/lib/calc'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ export default async function ResellerEtiquetasPage() {
       .order('data_upload', { ascending: false }),
     adminClient
       .from('products')
-      .select('id, nome, sku, product_cores(cor_id, cores_globais(nome, codigo))')
+      .select('id, nome, sku, custo_producao, margem_producao, product_cores(cor_id, cores_globais(nome, codigo))')
       .order('nome'),
   ])
 
@@ -54,6 +55,7 @@ export default async function ResellerEtiquetasPage() {
     id: p.id,
     nome: p.nome,
     sku: p.sku,
+    valorUnitario: calcCustoUnitario(p.custo_producao, p.margem_producao),
     cores: (p.product_cores ?? []).flatMap(pc => {
       const cg = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
       return cg ? [{ corId: pc.cor_id, nome: cg.nome, codigo: cg.codigo }] : []

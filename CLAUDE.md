@@ -36,3 +36,11 @@ Telas novas:
 - Admin: `src/app/admin/kits-revendedores/page.tsx` + `src/components/admin/kits/KitsRevendedoresView.tsx` ("Kits dos Revendedores") — só leitura, filtrável por revendedor, objetivo é ajudar a montar/despachar o kit físico na hora de embalar o pedido.
 
 Não mexe em cores, marketplaces ou saldo/wallet — kits é adição isolada.
+
+## Etiquetas — agrupamento por lote de upload (`supabase/migrations/010_etiquetas_upload_batch.sql`)
+
+Coluna `upload_batch_id uuid` (nullable) em `etiquetas`: identifica todas as etiquetas geradas a partir de um mesmo arquivo enviado pelo revendedor (ex: 1 PDF de 4 páginas = 4 linhas em `etiquetas`, mesmo `upload_batch_id`). Gerado com `crypto.randomUUID()` no client (`EtiquetasResellerView.tsx`), uma vez por arquivo — não por página — e propagado a cada `createEtiqueta()` da fila de revisão daquele arquivo.
+
+Regra de agrupamento na tela admin (`EtiquetasAdminView.tsx`): agrupa por `upload_batch_id ?? id` — etiquetas antigas (enviadas antes desta migration, sem `upload_batch_id`) viram lote de 1 item usando o próprio `id`, pra não sumir do histórico. Card do lote mostra revendedor/data/N itens, toggle "N itens ▼/▲" (mesmo padrão do toggle "X cores" em `ProdutosView.tsx`) expande lista dos produtos individuais (nome/SKU/cor/qtd), cada um com seu próprio botão pequeno de "Marcar como impressa" (`markEtiquetaPrinted`). Ação principal do card é "Marcar lote como impresso" (`markBatchPrinted`, novo em `src/app/actions/etiquetas.ts` — um único `update ... where id in (...)`, marca todos os itens pendentes do lote de uma vez). Abrir arquivo usa o `storage_path`/`signedUrl` do primeiro item do lote — todos os itens de um mesmo lote compartilham o mesmo arquivo físico.
+
+Foto exibida por item (`productImagem`) vem de `etiquetas.sale_id → sales.product_id → products.imagem` (bucket público `product-images`) — não confundir com `signedUrl`, que é o arquivo/comprovante enviado pelo revendedor (PDF ou foto da etiqueta em si, bucket privado `etiquetas`).

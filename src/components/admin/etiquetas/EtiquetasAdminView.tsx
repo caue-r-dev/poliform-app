@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { markEtiquetaPrinted, deleteEtiqueta } from '@/app/actions/etiquetas'
+import { useMemo, useState } from 'react'
+import { markEtiquetaPrinted, markBatchPrinted, deleteEtiqueta } from '@/app/actions/etiquetas'
 
 type Etiqueta = {
   id: string
@@ -14,7 +14,20 @@ type Etiqueta = {
   data_upload: string
   data_impressao: string | null
   signedUrl: string | null
+  productImagem: string | null
+  upload_batch_id: string | null
   resellers: { nome: string }[] | { nome: string } | null
+}
+
+type Batch = {
+  key: string
+  reseller: string
+  dataUpload: string
+  signedUrl: string | null
+  storagePath: string
+  items: Etiqueta[]
+  status: 'pendente' | 'impressa'
+  pendingIds: string[]
 }
 
 const fmtDT = (s: string) => new Date(s).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -24,31 +37,61 @@ function getReseller(rel: Etiqueta['resellers']): string {
   return Array.isArray(rel) ? (rel[0]?.nome ?? '—') : rel.nome
 }
 
+// Agrupa por upload_batch_id — etiquetas antigas (sem lote) viram lote de 1 item usando o próprio id.
+function groupBatches(etiquetas: Etiqueta[]): Batch[] {
+  const map = new Map<string, Etiqueta[]>()
+  for (const e of etiquetas) {
+    const key = e.upload_batch_id ?? e.id
+    const arr = map.get(key)
+    if (arr) arr.push(e)
+    else map.set(key, [e])
+  }
+  return Array.from(map.entries()).map(([key, items]) => {
+    const pendingIds = items.filter(i => i.status === 'pendente').map(i => i.id)
+    return {
+      key,
+      reseller: getReseller(items[0].resellers),
+      dataUpload: items[0].data_upload,
+      signedUrl: items[0].signedUrl,
+      storagePath: items[0].storage_path,
+      items,
+      status: pendingIds.length === 0 ? 'impressa' : 'pendente',
+      pendingIds,
+    }
+  })
+}
+
 export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[] }) {
   const [filter, setFilter] = useState<'todas' | 'pendente' | 'impressa'>('pendente')
   const [marking, setMarking] = useState<string | null>(null)
-  const [viewing, setViewing] = useState<Etiqueta | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [viewing, setViewing] = useState<Batch | null>(null)
 
-  const filtered = filter === 'todas' ? etiquetas : etiquetas.filter(e => e.status === filter)
+  const batches = useMemo(() => groupBatches(etiquetas), [etiquetas])
+  const filtered = filter === 'todas' ? batches : batches.filter(b => b.status === filter)
+  const pendentes = batches.filter(b => b.status === 'pendente').length
 
-  const pendentes = etiquetas.filter(e => e.status === 'pendente').length
-
-  async function handleMarkPrinted(e: Etiqueta) {
-    setMarking(e.id)
-    await markEtiquetaPrinted(e.id)
+  async function handleMarkBatchPrinted(b: Batch) {
+    setMarking(b.key)
+    await markBatchPrinted(b.pendingIds)
     setMarking(null)
-    if (viewing?.id === e.id) setViewing(null)
+    if (viewing?.key === b.key) setViewing(null)
+  }
+
+  async function handleMarkItemPrinted(id: string) {
+    setMarking(id)
+    await markEtiquetaPrinted(id)
+    setMarking(null)
   }
 
   async function handleDelete(e: Etiqueta) {
     if (!confirm(`Remover etiqueta ${e.sku}?`)) return
     await deleteEtiqueta(e.id)
-    if (viewing?.id === e.id) setViewing(null)
   }
 
   return (
     <>
-      {/* Modal visualização */}
+      {/* Modal visualização do arquivo do lote */}
       {viewing && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
@@ -57,26 +100,23 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
           <div style={{ background: '#fff', borderRadius: 14, padding: 24, maxWidth: 560, width: '90vw', maxHeight: '90vh', overflow: 'auto' }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{viewing.product_nome}</h2>
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{viewing.reseller} · {viewing.items.length} item{viewing.items.length !== 1 ? 's' : ''}</h2>
               <button onClick={() => setViewing(null)} className="btn btn-sm btn-ghost">Fechar</button>
             </div>
             {viewing.signedUrl && (
-              viewing.storage_path.endsWith('.pdf')
+              viewing.storagePath.endsWith('.pdf')
                 ? <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 20, textAlign: 'center', background: 'var(--paper)', marginBottom: 14 }}>
                     <span style={{ fontSize: 40 }}>📄</span>
                     <p style={{ margin: '8px 0 0', fontSize: 13, fontWeight: 700 }}>Arquivo PDF</p>
                     <a href={viewing.signedUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-ghost" style={{ marginTop: 8, display: 'inline-block' }}>Abrir PDF</a>
                   </div>
-                : <img src={viewing.signedUrl} alt={viewing.sku}
+                : <img src={viewing.signedUrl} alt=""
                     style={{ width: '100%', maxHeight: 340, objectFit: 'contain', border: '1px solid var(--line)', borderRadius: 8, marginBottom: 14 }} />
             )}
             <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 16px', fontSize: 13, margin: 0 }}>
               {[
-                ['Revendedor', getReseller(viewing.resellers)],
-                ['SKU', viewing.sku],
-                ['Cor', viewing.cor_nome ?? '—'],
-                ['Qtd', String(viewing.qtd)],
-                ['Enviado', fmtDT(viewing.data_upload)],
+                ['Revendedor', viewing.reseller],
+                ['Enviado', fmtDT(viewing.dataUpload)],
                 ['Status', viewing.status],
               ].map(([k, v]) => [
                 <dt key={`k-${k}`} style={{ fontWeight: 800, color: 'var(--ink-soft)' }}>{k}</dt>,
@@ -86,20 +126,17 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               {viewing.signedUrl && (
                 <a href={viewing.signedUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                  Abrir imagem
+                  Abrir arquivo
                 </a>
               )}
               {viewing.status === 'pendente' && (
                 <button
-                  onClick={() => handleMarkPrinted(viewing)}
-                  disabled={marking === viewing.id}
+                  onClick={() => handleMarkBatchPrinted(viewing)}
+                  disabled={marking === viewing.key}
                   className="btn btn-primary btn-sm"
                 >
-                  {marking === viewing.id ? '…' : 'Marcar como impressa'}
+                  {marking === viewing.key ? '…' : 'Marcar lote como impresso'}
                 </button>
-              )}
-              {viewing.status === 'pendente' && (
-                <button onClick={() => handleDelete(viewing)} className="btn btn-sm btn-danger-ghost">Remover</button>
               )}
             </div>
           </div>
@@ -115,50 +152,103 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
         ))}
       </div>
 
-      {/* Grid de cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+      {/* Grid de cards (por lote) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
         {filtered.length === 0 && (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: 'var(--ink-soft)', fontWeight: 700 }}>
             <span style={{ color: 'var(--brand)', fontSize: 22, display: 'block', marginBottom: 6 }}>✳</span>
             Nenhuma etiqueta {filter !== 'todas' ? filter : ''}.
           </div>
         )}
-        {filtered.map(e => (
-          <div key={e.id} style={{
-            background: '#fff', border: `1.5px solid ${e.status === 'impressa' ? 'var(--line)' : 'var(--brand)'}`,
-            borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
-            opacity: e.status === 'impressa' ? .65 : 1,
-          }} onClick={() => setViewing(e)}>
-            {e.signedUrl
-              ? <img src={e.signedUrl} alt={e.sku} style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
-              : <div style={{ width: '100%', height: 140, background: 'var(--paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', fontSize: 12 }}>
-                  sem imagem
+        {filtered.map(b => {
+          const isExpanded = expanded === b.key
+          return (
+            <div key={b.key} style={{
+              background: '#fff', border: `1.5px solid ${b.status === 'impressa' ? 'var(--line)' : 'var(--brand)'}`,
+              borderRadius: 10, overflow: 'hidden',
+              opacity: b.status === 'impressa' ? .65 : 1,
+            }}>
+              <div style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer' }} onClick={() => setViewing(b)}>
+                <span style={{ display: 'inline-flex', width: 40, height: 40, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', borderRadius: 8, border: '1px solid var(--line)', fontSize: 18 }}>
+                  📄
+                </span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {b.reseller}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 700 }}>
+                    {fmtDT(b.dataUpload)} · {b.items.length} item{b.items.length !== 1 ? 's' : ''}
+                  </div>
                 </div>
-            }
-            <div style={{ padding: '10px 12px' }}>
-              <div style={{ fontWeight: 800, fontSize: 12.5, marginBottom: 2 }}>{e.product_nome}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 700, marginBottom: 6 }}>
-                {getReseller(e.resellers)} · {e.sku}
-              </div>
-              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                {e.status === 'pendente'
+                {b.status === 'pendente'
                   ? <span className="tag" style={{ background: 'var(--warn-light)', color: 'var(--warn)' }}>Pendente</span>
                   : <span className="tag">Impressa</span>
                 }
-                {e.status === 'pendente' && (
+              </div>
+
+              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  onClick={() => setExpanded(isExpanded ? null : b.key)}
+                  className="btn btn-sm btn-ghost"
+                  style={{ fontSize: 11 }}
+                >
+                  {b.items.length} item{b.items.length !== 1 ? 's' : ''} {isExpanded ? '▲' : '▼'}
+                </button>
+                {b.status === 'pendente' && (
                   <button
-                    onClick={ev => { ev.stopPropagation(); handleMarkPrinted(e) }}
-                    disabled={marking === e.id}
+                    onClick={() => handleMarkBatchPrinted(b)}
+                    disabled={marking === b.key}
                     className="btn btn-sm btn-primary"
                     style={{ fontSize: 10.5, padding: '3px 8px' }}
                   >
-                    {marking === e.id ? '…' : 'Imprimir ✓'}
+                    {marking === b.key ? '…' : 'Marcar lote como impresso'}
                   </button>
                 )}
               </div>
+
+              {isExpanded && (
+                <div style={{ borderTop: '1px solid var(--line)', background: 'var(--paper)' }}>
+                  {b.items.map(item => (
+                    <div key={item.id} style={{
+                      display: 'flex', gap: 8, alignItems: 'center', padding: '8px 14px',
+                      borderBottom: '1px solid var(--line)',
+                    }}>
+                      {item.productImagem
+                        ? <img src={item.productImagem} alt={item.sku} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)', flexShrink: 0 }} />
+                        : <span style={{ display: 'inline-flex', width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 6, border: '1px dashed var(--line)', fontSize: 10, color: 'var(--ink-soft)' }} />
+                      }
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.product_nome}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: 'var(--ink-soft)', fontWeight: 700 }}>
+                          {item.sku} {item.cor_nome ? `· ${item.cor_nome}` : ''} · qtd {item.qtd}
+                        </div>
+                      </div>
+                      {item.status === 'pendente' ? (
+                        <>
+                          <button
+                            onClick={() => handleMarkItemPrinted(item.id)}
+                            disabled={marking === item.id}
+                            className="btn btn-sm btn-primary"
+                            style={{ fontSize: 10, padding: '2px 6px' }}
+                          >
+                            {marking === item.id ? '…' : 'Marcar como impressa'}
+                          </button>
+                          <button onClick={() => handleDelete(item)} className="btn btn-sm btn-danger-ghost" style={{ fontSize: 10, padding: '2px 6px' }}>
+                            Remover
+                          </button>
+                        </>
+                      ) : (
+                        <span className="tag" style={{ fontSize: 10 }}>Impressa</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </>
   )

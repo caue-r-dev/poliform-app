@@ -10,6 +10,7 @@ export type EtiquetaFormData = {
   product_id: string
   cor_id: string | null
   qtd: number
+  upload_batch_id: string
 }
 
 // Etiqueta enviada por revendedor sempre gera automaticamente uma sale
@@ -77,6 +78,7 @@ export async function createEtiqueta(data: EtiquetaFormData) {
     sku,
     qtd: data.qtd,
     storage_path: data.storage_path,
+    upload_batch_id: data.upload_batch_id,
   })
 
   if (etiquetaErr) {
@@ -96,6 +98,19 @@ export async function markEtiquetaPrinted(id: string) {
     status: 'impressa',
     data_impressao: new Date().toISOString(),
   }).eq('id', id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/etiquetas')
+  return { ok: true }
+}
+
+// Marca todos os itens de um lote de upload como impressos numa única query.
+export async function markBatchPrinted(ids: string[]) {
+  if (ids.length === 0) return { error: 'Nenhum item no lote.' }
+  const { error } = await adminClient.from('etiquetas').update({
+    status: 'impressa',
+    data_impressao: new Date().toISOString(),
+  }).in('id', ids)
 
   if (error) return { error: error.message }
   revalidatePath('/admin/etiquetas')

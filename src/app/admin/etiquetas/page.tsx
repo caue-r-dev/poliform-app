@@ -7,19 +7,22 @@ export default async function AdminEtiquetasPage() {
   const { data: etiquetas } = await adminClient
     .from('etiquetas')
     .select(`
-      id, sku, product_nome, cor_nome, qtd,
+      id, sku, product_nome, cor_nome, qtd, upload_batch_id,
       storage_path, status, data_upload, data_impressao,
-      resellers(nome)
+      resellers(nome),
+      sales(products(imagem))
     `)
     .order('data_upload', { ascending: false })
 
-  // Gera URLs assinadas server-side (1h)
+  // Gera URLs assinadas server-side (1h) — arquivo enviado pelo revendedor (comprovante), não a foto do produto.
   const etiquetasComUrl = await Promise.all(
     (etiquetas ?? []).map(async e => {
       const { data } = await adminClient.storage
         .from('etiquetas')
         .createSignedUrl(e.storage_path, 3600)
-      return { ...e, signedUrl: data?.signedUrl ?? null }
+      const sale = Array.isArray(e.sales) ? e.sales[0] : e.sales
+      const product = sale ? (Array.isArray(sale.products) ? sale.products[0] : sale.products) : null
+      return { ...e, signedUrl: data?.signedUrl ?? null, productImagem: product?.imagem ?? null }
     })
   )
 
