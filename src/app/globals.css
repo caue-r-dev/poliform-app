@@ -81,3 +81,119 @@ tbody tr:hover { background: #FAFCFB; }
 /* ---- MISC ---- */
 .helper { font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-top: 8px; }
 .ast { color: var(--brand); }
+
+/* ================================================================
+   NOVO DESIGN SYSTEM — "Kreatop" (dark)
+   Porte literal de poliform-kreatop-fiel.html. Tokens e classes
+   escopados em .theme-kreatop para não afetar telas ainda não
+   migradas (que continuam usando os tokens do :root acima).
+   Aplicar a classe .theme-kreatop no container raiz de cada tela
+   migrada (ex: no layout do grupo de rotas admin/reseller).
+   ================================================================ */
+.theme-kreatop {
+  --bg:#0B0C12; --sidebar:#0E1017; --card:#151721; --card2:#1B1E2A;
+  --line:#262939;
+  --ink:#F3F4F8; --soft:#9296A8; --soft2:#5F6376;
+  --green:#1FD97E; --green-ink:#052D18;
+  --violet:#7B6CF6; --violet-bg:rgba(123,108,246,.15);
+  --blue:#4C8DFF; --blue-bg:rgba(76,141,255,.15);
+  --red:#F16565; --red-bg:rgba(241,101,101,.15);
+  --pink:#F163B0; --pink-bg:rgba(241,99,176,.15);
+  --teal:#3FCFC0; --teal-bg:rgba(63,207,192,.15);
+  --amber:#F0B94C; --amber-bg:rgba(240,185,76,.15);
+  --up-bg:rgba(31,217,126,.14); --up:#1FD97E;
+  --down-bg:rgba(241,101,101,.14); --down:#F16565;
+
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.theme-kreatop .app { display: flex; min-height: 100vh; gap: 16px; padding: 16px; }
+
+/* ============ SIDEBAR ============ */
+.theme-kreatop .sidebar { width: 230px; flex-shrink: 0; background: var(--sidebar); border-radius: 22px; padding: 22px 16px; display: flex; flex-direction: column; }
+.theme-kreatop .brand { display: flex; align-items: center; gap: 11px; padding: 4px 6px 26px; }
+.theme-kreatop .brand .logo-slot { width: 38px; height: 38px; border-radius: 12px; background: var(--green); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: var(--green-ink); text-align: center; line-height: 1.1; overflow: hidden; }
+.theme-kreatop .brand .logo-slot img { width: 100%; height: 100%; object-fit: contain; }
+.theme-kreatop .brand .word { font-weight: 800; font-size: 19px; letter-spacing: -.02em; }
+.theme-kreatop .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; font-weight: 700; font-size: 14.5px; color: var(--soft); cursor: pointer; margin-bottom: 3px; text-decoration: none; }
+.theme-kreatop .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+.theme-kreatop .nav-item:hover { color: var(--ink); background: var(--card); }
+.theme-kreatop .nav-item.active { color: var(--green-ink); background: var(--green); }
+.theme-kreatop .nav-item .badge { margin-left: auto; background: var(--card2); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 99px; padding: 2px 8px; }
+.theme-kreatop .nav-item.active .badge { background: rgba(5,45,24,.25); color: var(--green-ink); }
+.theme-kreatop .nav-divider { height: 1px; background: var(--line); margin: 14px 6px; }
+.theme-kreatop .side-foot { margin-top: auto; padding: 10px 8px 2px; font-size: 10.5px; color: var(--soft2); line-height: 1.6; }
+.theme-kreatop .side-foot button { font-family: inherit; }
+
+.theme-kreatop .main-wrap { flex: 1; min-width: 0; display: flex; gap: 16px; }
+.theme-kreatop .main { flex: 1; min-width: 0; }
+
+/* ============ HEADER ============ */
+.theme-kreatop .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.theme-kreatop .page-head h1 { font-weight: 800; font-size: 26px; letter-spacing: -.02em; margin: 0; }
+.theme-kreatop .page-head p { font-size: 13px; color: var(--soft); font-weight: 600; margin-top: 3px; }
+.theme-kreatop .head-right { display: flex; align-items: center; gap: 12px; }
+.theme-kreatop .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--soft); }
+.theme-kreatop .user-chip { display: flex; align-items: center; gap: 10px; padding: 5px 14px 5px 5px; background: var(--card); border: 1px solid var(--line); border-radius: 99px; }
+.theme-kreatop .user-chip .av { width: 30px; height: 30px; border-radius: 99px; background: linear-gradient(135deg, var(--violet), var(--blue)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+.theme-kreatop .user-chip .nm { font-size: 12.5px; font-weight: 700; line-height: 1.2; }
+.theme-kreatop .user-chip .rl { font-size: 10.5px; color: var(--soft2); font-weight: 600; }
+
+.theme-kreatop .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.theme-kreatop .section-head h3 { font-size: 15.5px; font-weight: 800; margin: 0; }
+.theme-kreatop .dropdown { font-size: 12px; font-weight: 700; color: var(--soft); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 13px; display: flex; align-items: center; gap: 6px; }
+
+/* ============ KPI CARDS ============ */
+.theme-kreatop .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+.theme-kreatop .kpi-card { background: var(--card); border-radius: 20px; padding: 20px; }
+.theme-kreatop .kpi-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.theme-kreatop .kpi-icon { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.theme-kreatop .kpi-icon svg { width: 20px; height: 20px; }
+.theme-kreatop .kpi-lbl { font-weight: 700; font-size: 14px; }
+.theme-kreatop .kpi-bottom { display: flex; align-items: center; justify-content: space-between; }
+.theme-kreatop .kpi-val { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.theme-kreatop .kpi-delta { font-size: 11.5px; font-weight: 800; border-radius: 99px; padding: 4px 10px; }
+.theme-kreatop .kpi-delta.up { background: var(--up-bg); color: var(--up); }
+.theme-kreatop .kpi-delta.down { background: var(--down-bg); color: var(--down); }
+
+/* ============ CHART PANEL ============ */
+.theme-kreatop .panel { background: var(--card); border-radius: 22px; padding: 22px; }
+.theme-kreatop .legend { display: flex; gap: 16px; margin-bottom: 16px; }
+.theme-kreatop .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: var(--soft); }
+.theme-kreatop .legend-dot { width: 9px; height: 9px; border-radius: 99px; }
+.theme-kreatop .bars { display: flex; align-items: flex-end; gap: 20px; height: 160px; padding: 6px 4px 0; }
+.theme-kreatop .bar-col { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 100%; }
+.theme-kreatop .bar { width: 9px; border-radius: 99px 99px 0 0; }
+.theme-kreatop .bar-axis { display: flex; gap: 20px; padding-top: 10px; }
+.theme-kreatop .bar-axis span { flex: 1; text-align: center; font-size: 11.5px; font-weight: 700; color: var(--soft2); }
+
+/* ============ RIGHT COLUMN ============ */
+.theme-kreatop .right-col { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+.theme-kreatop .hero-card { background: var(--green); color: var(--green-ink); border-radius: 22px; padding: 24px; position: relative; overflow: hidden; }
+.theme-kreatop .hero-card::after { content: ''; position: absolute; width: 150px; height: 150px; background: rgba(255,255,255,.12); border-radius: 50%; right: -50px; top: -60px; }
+.theme-kreatop .hero-card .lbl { font-size: 12.5px; font-weight: 700; opacity: .75; }
+.theme-kreatop .hero-card .val { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 10px 0 16px; position: relative; }
+.theme-kreatop .hero-card .sub { font-size: 11.5px; font-weight: 700; opacity: .7; position: relative; }
+
+.theme-kreatop .list-card { background: var(--card); border-radius: 20px; padding: 18px; }
+.theme-kreatop .list-card h4 { font-size: 13.5px; font-weight: 800; margin: 0 0 12px; }
+.theme-kreatop .list-row { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
+.theme-kreatop .list-row .ic { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; font-size: 15px; }
+.theme-kreatop .list-row .ic img { width: 100%; height: 100%; object-fit: cover; }
+.theme-kreatop .list-row .ic svg { width: 16px; height: 16px; }
+.theme-kreatop .list-row .nm { font-size: 12.5px; font-weight: 700; }
+.theme-kreatop .list-row .sub { font-size: 10.5px; color: var(--soft2); font-weight: 600; }
+.theme-kreatop .list-row .pc { margin-left: auto; font-size: 11px; font-weight: 800; border-radius: 99px; padding: 3px 9px; }
+
+@media (max-width: 1100px) {
+  .theme-kreatop .right-col { display: none; }
+  .theme-kreatop .kpi-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 760px) {
+  .theme-kreatop .sidebar { display: none; }
+  .theme-kreatop .kpi-grid { grid-template-columns: 1fr; }
+}
