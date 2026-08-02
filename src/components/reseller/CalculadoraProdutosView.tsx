@@ -37,6 +37,7 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
     afiliadosNum,
     shopeeAceleraNum
   )
+  const lucroReais = margem != null && valorMedio != null ? (valorMedio * margem) / 100 : null
 
   function scheduleSave(next: Partial<{ mktId: string | null; valorMedio: number | null; afiliados: number; shopeeAcelera: number }>) {
     if (saveTimer.current) clearTimeout(saveTimer.current)
@@ -112,10 +113,13 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
       <td className="mono" style={{ fontWeight: 900, color: margem != null && margem > 0 ? 'var(--brand-dark)' : margem != null ? 'var(--danger)' : undefined }}>
         {fmtPct(margem)}
       </td>
+      <td className="mono" style={{ fontWeight: 900, color: lucroReais != null && lucroReais > 0 ? 'var(--brand-dark)' : lucroReais != null ? 'var(--danger)' : undefined }}>
+        {fmtBRL(lucroReais)}
+      </td>
     </tr>
     {saveErr && (
       <tr>
-        <td colSpan={7} style={{ padding: '0 8px 8px' }}>
+        <td colSpan={8} style={{ padding: '0 8px 8px' }}>
           <p style={{ color: 'var(--danger)', fontSize: 12, margin: 0 }}>{saveErr}</p>
         </td>
       </tr>
@@ -138,12 +142,13 @@ export default function CalculadoraProdutosView({ products, marketplaces }: { pr
               <th>Afiliados %</th>
               <th>Shopee Acelera %</th>
               <th>Margem de lucro</th>
+              <th>Lucro (R$)</th>
             </tr>
           </thead>
           <tbody>
             {products.length === 0 && (
               <tr className="empty-row">
-                <td colSpan={7}><span className="ast">✳</span>Nenhum produto disponível.</td>
+                <td colSpan={8}><span className="ast">✳</span>Nenhum produto disponível.</td>
               </tr>
             )}
             {products.map(p => <ProdutoRow key={p.id} product={p} marketplaces={marketplaces} />)}
