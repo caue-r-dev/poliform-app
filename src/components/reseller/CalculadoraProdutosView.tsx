@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { upsertResellerProductPricing } from '@/app/actions/reseller-pricing'
 import { calcMargemFinal } from '@/lib/pricing'
 import type { RankedMarketplace } from './CalculadoraMarketplacesView'
@@ -21,34 +21,44 @@ const fmtPct = (n: number | null) => n == null ? '—' : `${Number(n).toFixed(1)
 function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces: RankedMarketplace[] }) {
   const [mktId, setMktId] = useState(product.resellerMarketplaceId)
   const [valorMedio, setValorMedio] = useState(product.valorMedio)
-  const [afiliados, setAfiliados] = useState(product.afiliadosPct)
-  const [shopeeAcelera, setShopeeAcelera] = useState(product.shopeeAceleraPct)
+  const [afiliados, setAfiliados] = useState(String(product.afiliadosPct))
+  const [shopeeAcelera, setShopeeAcelera] = useState(String(product.shopeeAceleraPct))
+  const [saveErr, setSaveErr] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const afiliadosNum = parseFloat(afiliados) || 0
+  const shopeeAceleraNum = parseFloat(shopeeAcelera) || 0
 
   const selectedMkt = marketplaces.find(m => m.id === mktId) ?? null
   const margem = calcMargemFinal(
     product.repasse,
     selectedMkt ? { id: selectedMkt.id, nome: selectedMkt.nome, marketplace_tiers: selectedMkt.reseller_marketplace_tiers } : null,
     valorMedio,
-    afiliados,
-    shopeeAcelera
+    afiliadosNum,
+    shopeeAceleraNum
   )
 
   function scheduleSave(next: Partial<{ mktId: string | null; valorMedio: number | null; afiliados: number; shopeeAcelera: number }>) {
     if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      upsertResellerProductPricing(product.id, {
+    saveTimer.current = setTimeout(async () => {
+      const res = await upsertResellerProductPricing(product.id, {
         reseller_marketplace_id: next.mktId !== undefined ? next.mktId : mktId,
         valor_medio: next.valorMedio !== undefined ? next.valorMedio : valorMedio,
-        afiliados_pct: next.afiliados !== undefined ? next.afiliados : afiliados,
-        shopee_acelera_pct: next.shopeeAcelera !== undefined ? next.shopeeAcelera : shopeeAcelera,
+        afiliados_pct: next.afiliados !== undefined ? next.afiliados : afiliadosNum,
+        shopee_acelera_pct: next.shopeeAcelera !== undefined ? next.shopeeAcelera : shopeeAceleraNum,
       })
+      if (res?.error) {
+        setSaveErr(res.error)
+      } else {
+        setSaveErr('')
+      }
     }, 500)
   }
 
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current) }, [])
 
   return (
+    <Fragment>
     <tr>
       <td style={{ fontWeight: 800 }}>{product.nome}</td>
       <td className="mono">{fmtBRL(product.repasse)}</td>
@@ -82,9 +92,9 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
           type="number" step="0.1" min="0" style={{ width: 70 }}
           value={afiliados}
           onChange={e => {
-            const v = parseFloat(e.target.value) || 0
-            setAfiliados(v)
-            scheduleSave({ afiliados: v })
+            const raw = e.target.value
+            setAfiliados(raw)
+            scheduleSave({ afiliados: parseFloat(raw) || 0 })
           }}
         />
       </td>
@@ -93,9 +103,9 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
           type="number" step="0.1" min="0" style={{ width: 70 }}
           value={shopeeAcelera}
           onChange={e => {
-            const v = parseFloat(e.target.value) || 0
-            setShopeeAcelera(v)
-            scheduleSave({ shopeeAcelera: v })
+            const raw = e.target.value
+            setShopeeAcelera(raw)
+            scheduleSave({ shopeeAcelera: parseFloat(raw) || 0 })
           }}
         />
       </td>
@@ -103,6 +113,14 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
         {fmtPct(margem)}
       </td>
     </tr>
+    {saveErr && (
+      <tr>
+        <td colSpan={7} style={{ padding: '0 8px 8px' }}>
+          <p style={{ color: 'var(--danger)', fontSize: 12, margin: 0 }}>{saveErr}</p>
+        </td>
+      </tr>
+    )}
+    </Fragment>
   )
 }
 

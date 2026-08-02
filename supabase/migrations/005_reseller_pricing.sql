@@ -35,6 +35,11 @@ alter table public.reseller_marketplaces      enable row level security;
 alter table public.reseller_marketplace_tiers enable row level security;
 alter table public.reseller_product_pricing   enable row level security;
 
+-- Nota: as policies abaixo são defense-in-depth e hoje inalcançáveis — não há
+-- GRANT para `authenticated` nestas tabelas, todo acesso passa por adminClient
+-- (service_role, bypassa RLS) com checagem de ownership em app-level. NÃO
+-- "consertar" alargando os GRANTs para authenticated; ver comentário de GRANTS
+-- no fim deste arquivo e o padrão em 008_kits.sql.
 create policy "reseller_marketplaces_own" on public.reseller_marketplaces
   for all to authenticated
   using (reseller_id in (select id from public.resellers where auth_user_id = auth.uid()))
@@ -57,3 +62,13 @@ create policy "reseller_product_pricing_own" on public.reseller_product_pricing
   for all to authenticated
   using (reseller_id in (select id from public.resellers where auth_user_id = auth.uid()))
   with check (reseller_id in (select id from public.resellers where auth_user_id = auth.uid()));
+
+-- ============================================================
+-- GRANTS — tabelas novas não herdam o "GRANT ALL ... service_role"
+-- de 002_grants.sql (que só cobriu as tabelas existentes na época).
+-- Sem isso, adminClient (service_role) recebe "permission denied
+-- for table reseller_..." mesmo com RLS habilitado (ver 008_kits.sql).
+-- ============================================================
+GRANT ALL ON public.reseller_marketplaces      TO service_role;
+GRANT ALL ON public.reseller_marketplace_tiers TO service_role;
+GRANT ALL ON public.reseller_product_pricing   TO service_role;
