@@ -24,7 +24,7 @@ function TierForm({ marketplaceId }: { marketplaceId: string }) {
   }
 
   return (
-    <form onSubmit={handle} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: 8, alignItems: 'flex-end', marginTop: 12 }}>
+    <form onSubmit={handle} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, alignItems: 'flex-end', marginTop: 12 }}>
       <div className="field"><label style={{ fontSize: 10.5 }}>De (R$)</label><input type="number" step="0.01" value={min} onChange={e => setMin(e.target.value)} placeholder="0,00" required /></div>
       <div className="field"><label style={{ fontSize: 10.5 }}>Até (R$)</label><input type="number" step="0.01" value={max} onChange={e => setMax(e.target.value)} placeholder="0,00" required /></div>
       <div className="field"><label style={{ fontSize: 10.5 }}>Fixo (R$)</label><input type="number" step="0.01" value={fixo} onChange={e => setFixo(e.target.value)} placeholder="0,00" required /></div>
