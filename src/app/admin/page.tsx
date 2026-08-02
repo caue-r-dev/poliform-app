@@ -31,65 +31,67 @@ async function getStats() {
 const fmtBRL = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+const ICONS = {
+  produtos: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+  ),
+  vendas: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h2l2.6 12.6a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6"/><circle cx="9.5" cy="21" r="1.3"/><circle cx="17.5" cy="21" r="1.3"/></svg>
+  ),
+  pendente: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+  ),
+  revendedores: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+  ),
+}
+
 export default async function AdminDashboard() {
   const stats = await getStats()
 
   const cards = [
-    { label: 'Revendedores', value: stats.totalResellers, color: 'var(--ink)' },
-    { label: 'Produtos', value: stats.totalProducts, color: 'var(--ink)' },
-    { label: 'Vendas registradas', value: stats.totalSales, color: 'var(--brand-dark)' },
-    { label: 'A receber (pendente)', value: fmtBRL(stats.totalPendente), color: stats.totalPendente > 0 ? 'var(--warn)' : 'var(--ink)' },
+    { label: 'Vendas registradas', value: String(stats.totalSales), icon: ICONS.vendas, color: 'var(--violet)', bg: 'var(--violet-bg)' },
+    { label: 'A receber (pendente)', value: fmtBRL(stats.totalPendente), icon: ICONS.pendente, color: 'var(--red)', bg: 'var(--red-bg)' },
+    { label: 'Revendedores', value: String(stats.totalResellers), icon: ICONS.revendedores, color: 'var(--blue)', bg: 'var(--blue-bg)' },
+    { label: 'Produtos', value: String(stats.totalProducts), icon: ICONS.produtos, color: 'var(--teal)', bg: 'var(--teal-bg)' },
   ]
 
   return (
-    <>
-      {/* Topbar */}
-      <div style={{
-        background: '#fff', borderBottom: '1px solid var(--line)',
-        padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Painel geral</h1>
-          <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-            Visão consolidada da operação de revenda
-          </p>
+          <h1>Painel</h1>
+          <p>Visão consolidada da operação de revenda</p>
+        </div>
+        <div className="head-right">
+          <div className="icon-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+          <div className="icon-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-          {cards.map(card => (
-            <div key={card.label} style={{
-              background: '#fff', border: '1px solid var(--line)',
-              borderRadius: 'var(--radius)', padding: '18px 20px',
-              boxShadow: 'var(--shadow)',
-            }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                {card.label}
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 900, marginTop: 6, color: card.color }}>
-                {card.value}
-              </div>
+      <div className="section-head"><h3>Estatísticas</h3></div>
+      <div className="kpi-grid">
+        {cards.map(card => (
+          <div key={card.label} className="kpi-card">
+            <div className="kpi-top">
+              <div className="kpi-icon" style={{ background: card.bg, color: card.color }}>{card.icon}</div>
+              <div className="kpi-lbl">{card.label}</div>
             </div>
-          ))}
-        </div>
-
-        {/* Placeholder para gráficos (Fase E) */}
-        {stats.totalSales === 0 && (
-          <div style={{
-            background: '#fff', border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)', padding: '40px 20px',
-            textAlign: 'center', color: 'var(--ink-soft)', fontWeight: 700,
-          }}>
-            <span style={{ color: 'var(--brand)', fontSize: 28, display: 'block', marginBottom: 8 }}>✳</span>
-            Nenhuma venda registrada ainda.
-            <br />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Cadastre produtos e revendedores para começar.</span>
+            <div className="kpi-bottom">
+              <div className="kpi-val">{card.value}</div>
+            </div>
           </div>
-        )}
+        ))}
       </div>
-    </>
+
+      {stats.totalSales === 0 && (
+        <div className="panel" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--soft)', fontWeight: 700 }}>
+          <span style={{ color: 'var(--green)', fontSize: 28, display: 'block', marginBottom: 8 }}>✳</span>
+          Nenhuma venda registrada ainda.
+          <br />
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Cadastre produtos e revendedores para começar.</span>
+        </div>
+      )}
+    </div>
   )
 }
