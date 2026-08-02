@@ -55,7 +55,18 @@ export default function CalculadoraMarketplacesView({ marketplaces }: { marketpl
 
   async function handleDeleteMkt(id: string, nome: string) {
     if (!confirm(`Remover marketplace "${nome}" e todas suas faixas de taxa da sua calculadora?`)) return
-    await deleteResellerMarketplace(id)
+    const res = await deleteResellerMarketplace(id)
+    if (res.error) {
+      alert(res.error)
+    }
+  }
+
+  async function handleRemoveTier(tierId: string) {
+    if (!confirm('Remover esta faixa de taxa?')) return
+    const res = await removeResellerTier(tierId)
+    if (res.error) {
+      alert(res.error)
+    }
   }
 
   return (
@@ -95,7 +106,7 @@ export default function CalculadoraMarketplacesView({ marketplaces }: { marketpl
                 <span>Fixo {fmtBRL(t.fixo)}</span>
                 <span>{Number(t.percentual)}%</span>
                 <button
-                  onClick={() => removeResellerTier(t.id)}
+                  onClick={() => handleRemoveTier(t.id)}
                   style={{ border: 'none', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 6, width: 26, height: 26, fontWeight: 900, cursor: 'pointer' }}
                 >×</button>
               </div>
