@@ -6,6 +6,7 @@ import { signOut } from '@/app/actions/auth'
 
 const NAV = [
   { href: '/reseller',             label: 'Painel',       icon: '▦' },
+  { href: '/reseller/calculadora', label: 'Calculadora',  icon: '⊞' },
   { href: '/reseller/catalogo',    label: 'Catálogo',     icon: '◉' },
   { href: '/reseller/kits',        label: 'Montar Kit',   icon: '⊞' },
   { href: '/reseller/etiquetas',   label: 'Etiquetas',    icon: '◫' },
