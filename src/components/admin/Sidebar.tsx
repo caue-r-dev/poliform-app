@@ -41,7 +41,7 @@ export default function Sidebar() {
     <aside className="theme-kreatop sidebar" style={{ minHeight: '100vh' }}>
       <div className="brand">
         <div className="logo-slot">
-          <img src="/logo.jpeg" alt="Poliform" />
+          <img src="/logo-icon.jpg" alt="Poliform" />
         </div>
         <div className="word">poliform</div>
       </div>
