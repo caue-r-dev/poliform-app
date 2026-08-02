@@ -55,7 +55,7 @@ type Product = {
   sku: string
   ncm: string | null
   imagem: string | null
-  valor_medio: number | null
+  repasse: number | null
   cores: CorEntry[]
 }
 
@@ -91,7 +91,7 @@ export default function CatalogoPDF({ products, logoDataUrl }: { products: Produ
                 <Text style={s.prodNome}>{p.nome}</Text>
                 <Text style={s.skuBadge}>{p.sku}</Text>
                 {p.ncm && <Text style={s.ncm}>NCM {p.ncm}</Text>}
-                {p.valor_medio != null && <Text style={s.preco}>{fmtBRL(p.valor_medio)}</Text>}
+                {p.repasse != null && <Text style={s.preco}>{fmtBRL(p.repasse)}</Text>}
                 {p.cores.length > 0 && (
                   <>
                     <Text style={s.coresLabel}>Variações de cor</Text>

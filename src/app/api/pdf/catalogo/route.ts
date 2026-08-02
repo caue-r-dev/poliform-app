@@ -6,6 +6,7 @@ import CatalogoPDF from '@/lib/pdf/CatalogoPDF'
 import { createElement } from 'react'
 import fs from 'fs'
 import path from 'path'
+import { calcCustoUnitario } from '@/lib/calc'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,7 @@ export async function GET() {
 
   const { data: rawProducts } = await adminClient
     .from('products')
-    .select('id, nome, sku, ncm, imagem, valor_medio, product_cores(cor_id, cores_globais(nome, codigo))')
+    .select('id, nome, sku, ncm, imagem, custo_producao, margem_producao, product_cores(cor_id, cores_globais(nome, codigo))')
     .order('nome')
 
   const products = (rawProducts ?? []).map(p => ({
@@ -26,7 +27,7 @@ export async function GET() {
     sku: p.sku,
     ncm: p.ncm,
     imagem: p.imagem,
-    valor_medio: p.valor_medio,
+    repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
     cores: (p.product_cores ?? []).flatMap(pc => {
       const cg = pc.cores_globais
       if (!cg) return []
