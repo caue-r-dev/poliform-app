@@ -223,10 +223,7 @@ export default function ProdutosView({
       {/* ---- CORES GLOBAIS ---- */}
       <div className="card" style={{ marginBottom: 22 }}>
         <div className="card-head">
-          <h2>
-            <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
-            Cores Globais
-          </h2>
+          <h2>Cores Globais</h2>
           <p>Registro reutilizável entre produtos. SKU filho = SKU pai + "." + código</p>
         </div>
         <div className="card-body">
@@ -262,10 +259,7 @@ export default function ProdutosView({
       {/* ---- MATERIAIS GLOBAIS ---- */}
       <div className="card" style={{ marginBottom: 22 }}>
         <div className="card-head">
-          <h2>
-            <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
-            Materiais Globais
-          </h2>
+          <h2>Materiais Globais</h2>
           <p>Registro reutilizável entre produtos. Cada produto vincula um único material.</p>
         </div>
         <div className="card-body">
@@ -297,10 +291,7 @@ export default function ProdutosView({
       {editingId && (
         <div className="card" style={{ marginBottom: 22 }}>
           <div className="card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2>
-              <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
-              {editingId === 'new' ? 'Novo produto' : 'Editar produto'}
-            </h2>
+            <h2>{editingId === 'new' ? 'Novo produto' : 'Editar produto'}</h2>
             <button onClick={cancelEdit} className="btn btn-ghost btn-sm">Cancelar</button>
           </div>
           <form onSubmit={handleSubmit} className="card-body">
