@@ -88,14 +88,11 @@ export default function FechamentosView({ fechamentos, resellers }: {
   return (
     <>
       {/* Emitir novo fechamento */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', marginBottom: 24, boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-            Emitir novo fechamento
-          </h2>
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-head">
+          <h2 style={{ fontSize: 14 }}>Emitir novo fechamento</h2>
         </div>
-        <div style={{ padding: '16px 20px' }}>
+        <div className="card-body">
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="field" style={{ minWidth: 220 }}>
               <label>Revendedor</label>
@@ -124,21 +121,21 @@ export default function FechamentosView({ fechamentos, resellers }: {
 
           {/* Preview */}
           {preview && 'error' in preview && (
-            <p style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{preview.error}</p>
+            <p style={{ color: 'var(--red)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{preview.error}</p>
           )}
           {preview && 'ok' in preview && (
-            <div style={{ marginTop: 16, border: '1.5px solid var(--brand)', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ background: 'var(--brand-light)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginTop: 16, border: '1.5px solid var(--green)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--up-bg)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <strong style={{ fontSize: 13.5, fontWeight: 900, color: 'var(--brand-darker)' }}>
+                  <strong style={{ fontSize: 13.5, fontWeight: 900, color: 'var(--green)' }}>
                     {preview.reseller.nome}
                   </strong>
-                  <span style={{ fontSize: 12.5, color: 'var(--brand-dark)', marginLeft: 8 }}>
+                  <span style={{ fontSize: 12.5, color: 'var(--green)', marginLeft: 8 }}>
                     {preview.itens.length} venda{preview.itens.length !== 1 ? 's' : ''} · {fmtBRL(preview.total)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {emitError && <span style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700 }}>{emitError}</span>}
+                  {emitError && <span style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 700 }}>{emitError}</span>}
                   <button onClick={handleEmit} disabled={emitting} className="btn btn-primary btn-sm">
                     {emitting ? 'Emitindo…' : 'Emitir fechamento'}
                   </button>
@@ -187,20 +184,21 @@ export default function FechamentosView({ fechamentos, resellers }: {
         <select
           value={filterReseller}
           onChange={e => setFilterReseller(e.target.value)}
-          style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, fontSize: 13, padding: '7px 10px', border: '1.5px solid var(--line)', borderRadius: 8, background: '#fff' }}
+          className="dropdown"
+          style={{ fontFamily: 'inherit' }}
         >
           <option value="">Todos os revendedores</option>
           {resellers.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
         </select>
         {totalPendente > 0 && (
-          <span style={{ marginLeft: 'auto', fontWeight: 800, fontSize: 13, color: 'var(--warn)' }}>
+          <span style={{ marginLeft: 'auto', fontWeight: 800, fontSize: 13, color: 'var(--amber)' }}>
             A receber: {fmtBRL(totalPendente)}
           </span>
         )}
       </div>
 
       {/* Lista fechamentos */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -261,10 +259,10 @@ export default function FechamentosView({ fechamentos, resellers }: {
 
                 // Itens expandidos
                 expanded === f.id && (
-                  <tr key={`${f.id}-itens`} style={{ background: 'var(--paper)' }}>
+                  <tr key={`${f.id}-itens`} className="row-expand">
                     <td colSpan={8} style={{ padding: '0 0 0 0' }}>
                       <div style={{ padding: '12px 16px', borderTop: '1px dashed var(--line)' }}>
-                        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 800, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 800, color: 'var(--soft)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                           Itens do fechamento — {f.reseller_snapshot.nome}
                           {f.reseller_snapshot.cnpj && ` · CNPJ ${f.reseller_snapshot.cnpj}`}
                         </p>
@@ -293,9 +291,9 @@ export default function FechamentosView({ fechamentos, resellers }: {
                                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(i.total)}</td>
                                 </tr>
                               ))}
-                              <tr style={{ background: 'var(--brand-light)' }}>
+                              <tr style={{ background: 'var(--up-bg)' }}>
                                 <td colSpan={6} style={{ fontWeight: 800, textAlign: 'right', fontSize: 13 }}>Total</td>
-                                <td className="mono" style={{ fontWeight: 900, color: 'var(--brand-dark)' }}>{fmtBRL(Number(f.total))}</td>
+                                <td className="mono" style={{ fontWeight: 900, color: 'var(--green)' }}>{fmtBRL(Number(f.total))}</td>
                               </tr>
                             </tbody>
                           </table>

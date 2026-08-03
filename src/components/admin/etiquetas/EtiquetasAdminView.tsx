@@ -97,7 +97,7 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
         }} onClick={() => setViewing(null)}>
-          <div style={{ background: '#fff', borderRadius: 14, padding: 24, maxWidth: 560, width: '90vw', maxHeight: '90vh', overflow: 'auto' }}
+          <div className="card" style={{ padding: 24, maxWidth: 560, width: '90vw', maxHeight: '90vh', overflow: 'auto' }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{viewing.reseller} · {viewing.items.length} item{viewing.items.length !== 1 ? 's' : ''}</h2>
@@ -105,7 +105,7 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
             </div>
             {viewing.signedUrl && (
               viewing.storagePath.endsWith('.pdf')
-                ? <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 20, textAlign: 'center', background: 'var(--paper)', marginBottom: 14 }}>
+                ? <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 20, textAlign: 'center', background: 'var(--card2)', marginBottom: 14 }}>
                     <span style={{ fontSize: 40 }}>📄</span>
                     <p style={{ margin: '8px 0 0', fontSize: 13, fontWeight: 700 }}>Arquivo PDF</p>
                     <a href={viewing.signedUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-ghost" style={{ marginTop: 8, display: 'inline-block' }}>Abrir PDF</a>
@@ -119,7 +119,7 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
                 ['Enviado', fmtDT(viewing.dataUpload)],
                 ['Status', viewing.status],
               ].map(([k, v]) => [
-                <dt key={`k-${k}`} style={{ fontWeight: 800, color: 'var(--ink-soft)' }}>{k}</dt>,
+                <dt key={`k-${k}`} style={{ fontWeight: 800, color: 'var(--soft)' }}>{k}</dt>,
                 <dd key={`v-${k}`} style={{ margin: 0, fontWeight: 700 }}>{v}</dd>,
               ])}
             </dl>
@@ -155,33 +155,32 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
       {/* Grid de cards (por lote) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
         {filtered.length === 0 && (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: 'var(--ink-soft)', fontWeight: 700 }}>
-            <span style={{ color: 'var(--brand)', fontSize: 22, display: 'block', marginBottom: 6 }}>✳</span>
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: 'var(--soft)', fontWeight: 700 }}>
+            <span style={{ color: 'var(--green)', fontSize: 22, display: 'block', marginBottom: 6 }}>✳</span>
             Nenhuma etiqueta {filter !== 'todas' ? filter : ''}.
           </div>
         )}
         {filtered.map(b => {
           const isExpanded = expanded === b.key
           return (
-            <div key={b.key} style={{
-              background: '#fff', border: `1.5px solid ${b.status === 'impressa' ? 'var(--line)' : 'var(--brand)'}`,
-              borderRadius: 10, overflow: 'hidden',
+            <div key={b.key} className="card" style={{
+              border: `1.5px solid ${b.status === 'impressa' ? 'var(--line)' : 'var(--green)'}`,
               opacity: b.status === 'impressa' ? .65 : 1,
             }}>
               <div style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer' }} onClick={() => setViewing(b)}>
-                <span style={{ display: 'inline-flex', width: 40, height: 40, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', borderRadius: 8, border: '1px solid var(--line)', fontSize: 18 }}>
+                <span style={{ display: 'inline-flex', width: 40, height: 40, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: 'var(--card2)', borderRadius: 8, border: '1px solid var(--line)', fontSize: 18 }}>
                   📄
                 </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 800, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {b.reseller}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 700 }}>
+                  <div style={{ fontSize: 11, color: 'var(--soft)', fontWeight: 700 }}>
                     {fmtDT(b.dataUpload)} · {b.items.length} item{b.items.length !== 1 ? 's' : ''}
                   </div>
                 </div>
                 {b.status === 'pendente'
-                  ? <span className="tag" style={{ background: 'var(--warn-light)', color: 'var(--warn)' }}>Pendente</span>
+                  ? <span className="tag tag-warn">Pendente</span>
                   : <span className="tag">Impressa</span>
                 }
               </div>
@@ -207,7 +206,7 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
               </div>
 
               {isExpanded && (
-                <div style={{ borderTop: '1px solid var(--line)', background: 'var(--paper)' }}>
+                <div style={{ borderTop: '1px solid var(--line)', background: 'var(--card2)' }}>
                   {b.items.map(item => (
                     <div key={item.id} style={{
                       display: 'flex', gap: 8, alignItems: 'center', padding: '8px 14px',
@@ -215,13 +214,13 @@ export default function EtiquetasAdminView({ etiquetas }: { etiquetas: Etiqueta[
                     }}>
                       {item.productImagem
                         ? <img src={item.productImagem} alt={item.sku} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)', flexShrink: 0 }} />
-                        : <span style={{ display: 'inline-flex', width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 6, border: '1px dashed var(--line)', fontSize: 10, color: 'var(--ink-soft)' }} />
+                        : <span style={{ display: 'inline-flex', width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center', background: 'var(--card)', borderRadius: 6, border: '1px dashed var(--line)', fontSize: 10, color: 'var(--soft)' }} />
                       }
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontWeight: 800, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {item.product_nome}
                         </div>
-                        <div style={{ fontSize: 10.5, color: 'var(--ink-soft)', fontWeight: 700 }}>
+                        <div style={{ fontSize: 10.5, color: 'var(--soft)', fontWeight: 700 }}>
                           {item.sku} {item.cor_nome ? `· ${item.cor_nome}` : ''} · qtd {item.qtd}
                         </div>
                       </div>

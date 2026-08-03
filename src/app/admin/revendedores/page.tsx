@@ -10,19 +10,14 @@ export default async function RevendedoresPage() {
     .order('nome')
 
   return (
-    <>
-      <div style={{
-        background: '#fff', borderBottom: '1px solid var(--line)',
-        padding: '18px 32px',
-      }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Revendedores</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Cadastro dos parceiros de revenda
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Revendedores</h1>
+          <p>Cadastro dos parceiros de revenda</p>
+        </div>
       </div>
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        <RevendedoresView resellers={resellers ?? []} />
-      </div>
-    </>
+      <RevendedoresView resellers={resellers ?? []} />
+    </div>
   )
 }

@@ -27,16 +27,14 @@ export default async function AdminEtiquetasPage() {
   )
 
   return (
-    <>
-      <div style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '18px 32px' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Etiquetas</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Fila de impressão de etiquetas de postagem
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Etiquetas</h1>
+          <p>Fila de impressão de etiquetas de postagem</p>
+        </div>
       </div>
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        <EtiquetasAdminView etiquetas={etiquetasComUrl} />
-      </div>
-    </>
+      <EtiquetasAdminView etiquetas={etiquetasComUrl} />
+    </div>
   )
 }

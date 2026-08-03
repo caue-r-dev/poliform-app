@@ -10,19 +10,14 @@ export default async function MarketplacesPage() {
     .order('nome')
 
   return (
-    <>
-      <div style={{
-        background: '#fff', borderBottom: '1px solid var(--line)',
-        padding: '18px 32px',
-      }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Marketplaces</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Taxas fixas e variáveis por faixa de valor
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Marketplaces</h1>
+          <p>Taxas fixas e variáveis por faixa de valor</p>
+        </div>
       </div>
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        <MarketplacesView marketplaces={marketplaces ?? []} />
-      </div>
-    </>
+      <MarketplacesView marketplaces={marketplaces ?? []} />
+    </div>
   )
 }

@@ -75,17 +75,17 @@ export default function RevendedoresView({ resellers }: { resellers: Reseller[] 
       {/* Credenciais recém geradas */}
       {newCredentials && (
         <div style={{
-          background: 'var(--brand-light)', border: '1.5px solid var(--brand)',
+          background: 'var(--up-bg)', border: '1.5px solid var(--green)',
           borderRadius: 10, padding: '14px 18px', marginBottom: 18,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
         }}>
           <div>
-            <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: 'var(--brand-darker)' }}>
+            <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: 'var(--green)' }}>
               Credenciais provisórias — anote agora, não serão mostradas novamente
             </p>
             <p style={{ margin: '6px 0 0', fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>
               <strong>E-mail:</strong> {newCredentials.email} &nbsp;
-              <strong>Senha:</strong> <code style={{ background: '#fff', padding: '2px 6px', borderRadius: 4 }}>{newCredentials.tempPassword}</code>
+              <strong>Senha:</strong> <code style={{ background: 'var(--card2)', padding: '2px 6px', borderRadius: 4 }}>{newCredentials.tempPassword}</code>
             </p>
           </div>
           <button onClick={() => setNewCredentials(null)} className="btn btn-sm btn-ghost">Fechar</button>
@@ -94,18 +94,12 @@ export default function RevendedoresView({ resellers }: { resellers: Reseller[] 
 
       {/* Formulário */}
       {editingId && (
-        <div style={{
-          background: '#fff', border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)', marginBottom: 22, boxShadow: 'var(--shadow)', overflow: 'hidden',
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-              <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-              {editingId === 'new' ? 'Novo revendedor' : 'Editar revendedor'}
-            </h2>
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div className="card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2>{editingId === 'new' ? 'Novo revendedor' : 'Editar revendedor'}</h2>
             <button onClick={cancelEdit} className="btn btn-ghost btn-sm">Cancelar</button>
           </div>
-          <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+          <form onSubmit={handleSubmit} className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Nome</label>
@@ -136,7 +130,7 @@ export default function RevendedoresView({ resellers }: { resellers: Reseller[] 
                 Uma senha provisória será gerada automaticamente. O revendedor deverá trocá-la no primeiro acesso.
               </p>
             )}
-            {error && <p style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--red)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{error}</p>}
             <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
               <button type="submit" disabled={saving} className="btn btn-primary">
                 {saving ? 'Salvando…' : editingId === 'new' ? 'Criar revendedor' : 'Salvar alterações'}
@@ -154,7 +148,7 @@ export default function RevendedoresView({ resellers }: { resellers: Reseller[] 
       )}
 
       {/* Tabela */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>

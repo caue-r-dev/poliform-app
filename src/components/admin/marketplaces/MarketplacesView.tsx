@@ -32,7 +32,7 @@ function TierForm({ marketplaceId }: { marketplaceId: string }) {
       <button type="submit" disabled={saving} className="btn btn-sm btn-primary" style={{ marginBottom: 1 }}>
         {saving ? '…' : 'Add'}
       </button>
-      {err && <p style={{ gridColumn: '1/-1', color: 'var(--danger)', fontSize: 12, margin: 0 }}>{err}</p>}
+      {err && <p style={{ gridColumn: '1/-1', color: 'var(--red)', fontSize: 12, margin: 0 }}>{err}</p>}
     </form>
   )
 }
@@ -59,7 +59,7 @@ export default function MarketplacesView({ marketplaces }: { marketplaces: Marke
   return (
     <>
       {/* Adicionar marketplace */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 20, marginBottom: 22, boxShadow: 'var(--shadow)' }}>
+      <div className="card card-body" style={{ marginBottom: 22 }}>
         <form onSubmit={handleAddMkt} style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
           <div className="field" style={{ flex: 1, maxWidth: 300 }}>
             <label>Novo Marketplace</label>
@@ -68,14 +68,14 @@ export default function MarketplacesView({ marketplaces }: { marketplaces: Marke
           <button type="submit" disabled={addingMkt} className="btn btn-primary" style={{ marginBottom: 1 }}>
             {addingMkt ? '…' : '+ Adicionar'}
           </button>
-          {mktErr && <p style={{ color: 'var(--danger)', fontSize: 13, margin: 0 }}>{mktErr}</p>}
+          {mktErr && <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{mktErr}</p>}
         </form>
       </div>
 
       {/* Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 18 }}>
         {marketplaces.map(m => (
-          <div key={m.id} style={{ border: '1.5px solid var(--line)', borderRadius: 12, padding: '16px 18px', background: '#fff' }}>
+          <div key={m.id} className="card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{m.nome}</h3>
               <button onClick={() => handleDeleteMkt(m.id, m.nome)} className="btn btn-sm btn-danger-ghost">Remover</button>
@@ -95,10 +95,7 @@ export default function MarketplacesView({ marketplaces }: { marketplaces: Marke
                 <span>até {fmtBRL(t.max)}</span>
                 <span>Fixo {fmtBRL(t.fixo)}</span>
                 <span>{Number(t.percentual)}%</span>
-                <button
-                  onClick={() => removeTier(t.id)}
-                  style={{ border: 'none', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 6, width: 26, height: 26, fontWeight: 900, cursor: 'pointer' }}
-                >×</button>
+                <button onClick={() => removeTier(t.id)} className="chip-x" style={{ borderRadius: 6, width: 26, height: 26, fontSize: 14 }}>×</button>
               </div>
             ))}
 

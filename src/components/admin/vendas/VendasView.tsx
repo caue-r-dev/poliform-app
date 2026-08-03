@@ -90,18 +90,12 @@ export default function VendasView({ sales, resellers, products, coresGlobais }:
     <>
       {/* Formulário */}
       {showForm && (
-        <div style={{
-          background: '#fff', border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)', marginBottom: 22, boxShadow: 'var(--shadow)', overflow: 'hidden',
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-              <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-              Registrar venda
-            </h2>
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div className="card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2>Registrar venda</h2>
             <button onClick={() => { setShowForm(false); setError('') }} className="btn btn-ghost btn-sm">Cancelar</button>
           </div>
-          <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+          <form onSubmit={handleSubmit} className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, alignItems: 'end' }}>
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Revendedor</label>
@@ -142,16 +136,16 @@ export default function VendasView({ sales, resellers, products, coresGlobais }:
                   </div>
                   <div className="field">
                     <label>Repasse unitário</label>
-                    <input readOnly value={selectedProduct.custo_unitario != null ? fmtBRL(selectedProduct.custo_unitario) : 'N/A'} className="field-readonly" style={{ color: 'var(--brand-dark)', fontWeight: 900 }} />
+                    <input readOnly value={selectedProduct.custo_unitario != null ? fmtBRL(selectedProduct.custo_unitario) : 'N/A'} className="field-readonly" style={{ color: 'var(--green)', fontWeight: 900 }} />
                   </div>
                   <div className="field">
                     <label>Total</label>
-                    <input readOnly value={selectedProduct.custo_unitario != null ? fmtBRL(selectedProduct.custo_unitario * form.qtd) : 'N/A'} className="field-readonly" style={{ color: 'var(--brand-dark)', fontWeight: 900 }} />
+                    <input readOnly value={selectedProduct.custo_unitario != null ? fmtBRL(selectedProduct.custo_unitario * form.qtd) : 'N/A'} className="field-readonly" style={{ color: 'var(--green)', fontWeight: 900 }} />
                   </div>
                 </>
               )}
             </div>
-            {error && <p style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--red)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{error}</p>}
             <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
               <button type="submit" disabled={saving} className="btn btn-primary">
                 {saving ? 'Salvando…' : 'Registrar venda'}
@@ -167,12 +161,13 @@ export default function VendasView({ sales, resellers, products, coresGlobais }:
         <select
           value={filterReseller}
           onChange={e => setFilterReseller(e.target.value)}
-          style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, fontSize: 13, padding: '8px 10px', border: '1.5px solid var(--line)', borderRadius: 8, background: '#fff', color: 'var(--ink)' }}
+          className="dropdown"
+          style={{ fontFamily: 'inherit' }}
         >
           <option value="">Todos os revendedores</option>
           {resellers.map(r => <option key={r.id} value={r.nome}>{r.nome}</option>)}
         </select>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-soft)' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--soft)' }}>
           {filtered.length} venda{filtered.length !== 1 ? 's' : ''} · Total {fmtBRL(totalGeral)}
         </span>
         <div style={{ marginLeft: 'auto' }}>
@@ -183,7 +178,7 @@ export default function VendasView({ sales, resellers, products, coresGlobais }:
       </div>
 
       {/* Tabela */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -210,7 +205,7 @@ export default function VendasView({ sales, resellers, products, coresGlobais }:
                   <td style={{ fontWeight: 800 }}>{getName(s.resellers) ?? '—'}</td>
                   <td>{getName(s.products) ?? '—'}</td>
                   <td><span className="tag tag-muted">{s.sku}</span></td>
-                  <td>{s.cor_nome ?? <span style={{ color: 'var(--ink-soft)' }}>—</span>}</td>
+                  <td>{s.cor_nome ?? <span style={{ color: 'var(--soft)' }}>—</span>}</td>
                   <td className="mono">{s.qtd}</td>
                   <td className="mono">{fmtBRL(s.valor_unitario)}</td>
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(s.total)}</td>
