@@ -13,19 +13,14 @@ export default async function KitsRevendedoresPage() {
   const sortedKits = [...(kits ?? [])].sort((a, b) => compareSku(a.sku, b.sku))
 
   return (
-    <>
-      <div style={{
-        background: '#fff', borderBottom: '1px solid var(--line)',
-        padding: '18px 32px',
-      }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Kits dos Revendedores</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Só visualização — ajuda a identificar e montar fisicamente o kit personalizado na hora de embalar e despachar o pedido
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Kits dos Revendedores</h1>
+          <p>Só visualização — ajuda a identificar e montar fisicamente o kit personalizado na hora de embalar e despachar o pedido</p>
+        </div>
       </div>
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        <KitsRevendedoresView kits={sortedKits} />
-      </div>
-    </>
+      <KitsRevendedoresView kits={sortedKits} />
+    </div>
   )
 }

@@ -46,10 +46,7 @@ export default function KitsRevendedoresView({ kits }: { kits: Kit[] }) {
         </div>
       </div>
 
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
-      }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -80,8 +77,8 @@ export default function KitsRevendedoresView({ kits }: { kits: Kit[] }) {
                         return (
                           <span key={i} style={{
                             fontSize: 11.5, fontWeight: 700, padding: '3px 9px',
-                            borderRadius: 20, background: 'var(--paper)', border: '1px solid var(--line)',
-                            color: 'var(--ink-soft)',
+                            borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                            color: 'var(--soft)',
                           }}>
                             {row.quantidade}× {p.nome} <span style={{ opacity: .7 }}>· {p.sku}</span>
                           </span>
