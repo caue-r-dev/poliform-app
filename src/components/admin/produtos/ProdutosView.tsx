@@ -221,41 +221,24 @@ export default function ProdutosView({
   return (
     <>
       {/* ---- CORES GLOBAIS ---- */}
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', marginBottom: 22,
-        boxShadow: 'var(--shadow)', overflow: 'hidden',
-      }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
+      <div className="card" style={{ marginBottom: 22 }}>
+        <div className="card-head">
+          <h2>
+            <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
             Cores Globais
           </h2>
-          <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 600 }}>
-            Registro reutilizável entre produtos. SKU filho = SKU pai + "." + código
-          </p>
+          <p>Registro reutilizável entre produtos. SKU filho = SKU pai + "." + código</p>
         </div>
-        <div style={{ padding: 20 }}>
+        <div className="card-body">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
             {coresGlobais.length === 0 && (
               <span className="helper" style={{ margin: 0 }}>Nenhuma cor cadastrada ainda.</span>
             )}
             {coresGlobais.map(c => (
-              <span key={c.id} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: '#fff', border: '1.5px solid var(--line)', borderRadius: 20,
-                padding: '5px 6px 5px 12px', fontSize: 12.5, fontWeight: 700,
-              }}>
+              <span key={c.id} className="chip">
                 {c.nome}
-                <span style={{ color: 'var(--ink-soft)', fontWeight: 700 }}>· {c.codigo}</span>
-                <button
-                  onClick={() => handleRemoveCor(c.id, c.nome)}
-                  style={{
-                    border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
-                    borderRadius: '50%', width: 18, height: 18, fontSize: 12,
-                    fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
-                  }}
-                >×</button>
+                <span style={{ color: 'var(--soft)', fontWeight: 700 }}>· {c.codigo}</span>
+                <button onClick={() => handleRemoveCor(c.id, c.nome)} className="chip-x">×</button>
               </span>
             ))}
           </div>
@@ -271,46 +254,29 @@ export default function ProdutosView({
             <button type="submit" disabled={corSaving} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }}>
               {corSaving ? '…' : '+ Adicionar cor'}
             </button>
-            {corError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{corError}</p>}
+            {corError && <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{corError}</p>}
           </form>
         </div>
       </div>
 
       {/* ---- MATERIAIS GLOBAIS ---- */}
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', marginBottom: 22,
-        boxShadow: 'var(--shadow)', overflow: 'hidden',
-      }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
+      <div className="card" style={{ marginBottom: 22 }}>
+        <div className="card-head">
+          <h2>
+            <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
             Materiais Globais
           </h2>
-          <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 600 }}>
-            Registro reutilizável entre produtos. Cada produto vincula um único material.
-          </p>
+          <p>Registro reutilizável entre produtos. Cada produto vincula um único material.</p>
         </div>
-        <div style={{ padding: 20 }}>
+        <div className="card-body">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
             {materiaisGlobais.length === 0 && (
               <span className="helper" style={{ margin: 0 }}>Nenhum material cadastrado ainda.</span>
             )}
             {materiaisGlobais.map(m => (
-              <span key={m.id} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: '#fff', border: '1.5px solid var(--line)', borderRadius: 20,
-                padding: '5px 6px 5px 12px', fontSize: 12.5, fontWeight: 700,
-              }}>
+              <span key={m.id} className="chip">
                 {m.nome}
-                <button
-                  onClick={() => handleRemoveMaterial(m.id, m.nome)}
-                  style={{
-                    border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
-                    borderRadius: '50%', width: 18, height: 18, fontSize: 12,
-                    fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
-                  }}
-                >×</button>
+                <button onClick={() => handleRemoveMaterial(m.id, m.nome)} className="chip-x">×</button>
               </span>
             ))}
           </div>
@@ -322,26 +288,22 @@ export default function ProdutosView({
             <button type="submit" disabled={materialSaving} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }}>
               {materialSaving ? '…' : '+ Adicionar material'}
             </button>
-            {materialError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{materialError}</p>}
+            {materialError && <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{materialError}</p>}
           </form>
         </div>
       </div>
 
       {/* ---- FORMULÁRIO PRODUTO ---- */}
       {editingId && (
-        <div style={{
-          background: '#fff', border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)', marginBottom: 22,
-          boxShadow: 'var(--shadow)', overflow: 'hidden',
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-              <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div className="card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2>
+              <span style={{ color: 'var(--green)', marginRight: 6 }}>✳</span>
               {editingId === 'new' ? 'Novo produto' : 'Editar produto'}
             </h2>
             <button onClick={cancelEdit} className="btn btn-ghost btn-sm">Cancelar</button>
           </div>
-          <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+          <form onSubmit={handleSubmit} className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, alignItems: 'end' }}>
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Nome</label>
@@ -397,7 +359,7 @@ export default function ProdutosView({
               <div className="field">
                 <label>Margem de Lucro (%)</label>
                 <input readOnly value={calc?.margem?.toFixed(1) ?? ''} className="field-readonly"
-                  style={{ fontWeight: 900, color: calc && calc.margem > 0 ? 'var(--brand-dark)' : 'var(--danger)' }} />
+                  style={{ fontWeight: 900, color: calc && calc.margem > 0 ? 'var(--green)' : 'var(--red)' }} />
               </div>
 
               <div className="field" style={{ gridColumn: 'span 2' }}>
@@ -406,8 +368,8 @@ export default function ProdutosView({
                   <input type="file" accept="image/*" onChange={handleImageSelect} disabled={uploadingImage} style={{ flex: 1 }} />
                   <ImgThumb src={form.imagem || null} alt="Prévia" size={38} />
                 </div>
-                {uploadingImage && <p style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '4px 0 0' }}>Enviando…</p>}
-                {uploadError && <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>{uploadError}</p>}
+                {uploadingImage && <p style={{ fontSize: 12, color: 'var(--soft)', margin: '4px 0 0' }}>Enviando…</p>}
+                {uploadError && <p style={{ fontSize: 12, color: 'var(--red)', margin: '4px 0 0' }}>{uploadError}</p>}
               </div>
               <div className="field" style={{ gridColumn: 'span 2' }}>
                 <label>Álbum de Fotos (URL)</label>
@@ -416,7 +378,7 @@ export default function ProdutosView({
             </div>
 
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--line)' }}>
-              <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+              <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--soft)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                 Ficha Técnica
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
@@ -466,7 +428,7 @@ export default function ProdutosView({
               </div>
             </div>
 
-            {formError && <p style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{formError}</p>}
+            {formError && <p style={{ color: 'var(--red)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{formError}</p>}
             <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
               <button type="submit" disabled={saving} className="btn btn-primary">
                 {saving ? 'Salvando…' : 'Salvar produto'}
@@ -484,10 +446,7 @@ export default function ProdutosView({
         </div>
       )}
 
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
-      }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -542,10 +501,10 @@ export default function ProdutosView({
                       </button>
                     </td>
                     <td className="mono">{fmtBRL(c)}</td>
-                    <td>{p.marketplace_tiers?.nome ?? <span style={{ color: 'var(--ink-soft)' }}>—</span>}</td>
+                    <td>{p.marketplace_tiers?.nome ?? <span style={{ color: 'var(--soft)' }}>—</span>}</td>
                     <td className="mono">{fmtBRL(p.valor_medio)}</td>
                     <td className="mono">{r ? fmtBRL(r.custoComTaxas) : '—'}</td>
-                    <td className="mono" style={{ fontWeight: 800, color: r && r.margem > 0 ? 'var(--brand-dark)' : r ? 'var(--danger)' : undefined }}>
+                    <td className="mono" style={{ fontWeight: 800, color: r && r.margem > 0 ? 'var(--green)' : r ? 'var(--red)' : undefined }}>
                       {r ? fmtPct(r.margem) : '—'}
                     </td>
                     <td>
@@ -558,9 +517,9 @@ export default function ProdutosView({
 
                   // Painel de cores expandível
                   isExpanded && (
-                    <tr key={`${p.id}-cores`} style={{ background: 'var(--paper)' }}>
+                    <tr key={`${p.id}-cores`} className="row-expand">
                       <td colSpan={10} style={{ padding: '16px 20px' }}>
-                        <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                           Cores vinculadas a {p.nome} — SKU filho = {p.sku}.<em>código</em>
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -573,14 +532,7 @@ export default function ProdutosView({
                               <button
                                 key={cor.id}
                                 onClick={() => handleToggleColor(p.id, cor.id)}
-                                style={{
-                                  fontFamily: 'Nunito, sans-serif', fontWeight: 700, fontSize: 12.5,
-                                  padding: '5px 12px', borderRadius: 20, cursor: 'pointer',
-                                  border: `1.5px solid ${linked ? 'var(--brand)' : 'var(--line)'}`,
-                                  background: linked ? 'var(--brand-light)' : '#fff',
-                                  color: linked ? 'var(--brand-dark)' : 'var(--ink-soft)',
-                                  transition: 'all .12s',
-                                }}
+                                className={`toggle-chip ${linked ? 'on' : 'off'}`}
                               >
                                 {linked ? '✓ ' : ''}{cor.nome}
                                 <span style={{ opacity: .7 }}> · {p.sku}.{cor.codigo}</span>
@@ -594,9 +546,9 @@ export default function ProdutosView({
 
                   // Painel de kits do mesmo produto, expandível
                   isKitExpanded && (
-                    <tr key={`${p.id}-kits`} style={{ background: 'var(--paper)' }}>
+                    <tr key={`${p.id}-kits`} className="row-expand">
                       <td colSpan={10} style={{ padding: '16px 20px' }}>
-                        <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <p style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--soft)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                           Kits de {p.nome} — SKU = {p.sku}.KIT<em>qtd</em>
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
@@ -604,22 +556,11 @@ export default function ProdutosView({
                             <span className="helper" style={{ margin: 0 }}>Nenhum kit cadastrado para este produto.</span>
                           )}
                           {p.kits.map(kit => (
-                            <span key={kit.id} style={{
-                              display: 'flex', alignItems: 'center', gap: 8,
-                              background: '#fff', border: '1.5px solid var(--line)', borderRadius: 20,
-                              padding: '5px 6px 5px 12px', fontSize: 12.5, fontWeight: 700,
-                            }}>
+                            <span key={kit.id} className="chip">
                               {kit.nome}
-                              <span style={{ color: 'var(--ink-soft)', fontWeight: 700 }}>· {kit.sku}</span>
-                              <span style={{ color: 'var(--brand-dark)', fontWeight: 800 }}>· {fmtBRL(kit.preco_repasse)}</span>
-                              <button
-                                onClick={() => handleRemoveKit(kit.id, kit.nome)}
-                                style={{
-                                  border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
-                                  borderRadius: '50%', width: 18, height: 18, fontSize: 12,
-                                  fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
-                                }}
-                              >×</button>
+                              <span style={{ color: 'var(--soft)', fontWeight: 700 }}>· {kit.sku}</span>
+                              <span style={{ color: 'var(--green)', fontWeight: 800 }}>· {fmtBRL(kit.preco_repasse)}</span>
+                              <button onClick={() => handleRemoveKit(kit.id, kit.nome)} className="chip-x">×</button>
                             </span>
                           ))}
                         </div>
@@ -635,7 +576,7 @@ export default function ProdutosView({
                           <button type="submit" disabled={kitSaving} className="btn btn-primary btn-sm" style={{ marginBottom: 1 }}>
                             {kitSaving ? '…' : '+ Adicionar kit'}
                           </button>
-                          {kitError && <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{kitError}</p>}
+                          {kitError && <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 700, margin: 0 }}>{kitError}</p>}
                         </form>
                       </td>
                     </tr>
