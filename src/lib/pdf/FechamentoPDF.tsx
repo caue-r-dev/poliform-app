@@ -67,6 +67,17 @@ const s = StyleSheet.create({
   statusPago: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: C.statusPago },
   statusPendente: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: C.statusPendente },
 
+  // Pix
+  pixBlock: {
+    marginTop: 16, padding: 14, borderWidth: 1, borderColor: C.line, borderStyle: 'solid',
+    borderRadius: 6, flexDirection: 'row', alignItems: 'center',
+  },
+  pixQr: { width: 90, height: 90, marginRight: 14 },
+  pixTextCol: { flex: 1 },
+  pixTitle: { fontFamily: 'Helvetica-Bold', fontSize: 10, color: C.inkDark, marginBottom: 4 },
+  pixHint: { fontSize: 8.5, color: C.inkMid, marginBottom: 6 },
+  pixCode: { fontSize: 7, color: C.inkFaint },
+
   // Observações
   obsBlock: { marginTop: 14 },
   obsTitle: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: C.inkDark, marginBottom: 6 },
@@ -100,9 +111,11 @@ type Props = {
     reseller_snapshot: { nome: string; cnpj?: string | null }
   }
   logoDataUrl?: string
+  pixQrDataUrl?: string
+  pixCopyPaste?: string
 }
 
-export default function FechamentoPDF({ fechamento: f, logoDataUrl }: Props) {
+export default function FechamentoPDF({ fechamento: f, logoDataUrl, pixQrDataUrl, pixCopyPaste }: Props) {
   const itens = Array.isArray(f.itens) ? f.itens : []
   const snap = f.reseller_snapshot
   const periodoTxt = (f.periodo_inicio || f.periodo_fim)
@@ -186,6 +199,20 @@ export default function FechamentoPDF({ fechamento: f, logoDataUrl }: Props) {
             Status: {statusTxt}
           </Text>
         </View>
+
+        {/* Pix */}
+        {pixQrDataUrl && (
+          <View style={s.pixBlock}>
+            <Image src={pixQrDataUrl} style={s.pixQr} />
+            <View style={s.pixTextCol}>
+              <Text style={s.pixTitle}>Pague com Pix</Text>
+              <Text style={s.pixHint}>
+                Aponte a câmera do app do seu banco pro QR Code, ou copie o código abaixo em &quot;Pix Copia e Cola&quot;.
+              </Text>
+              {pixCopyPaste && <Text style={s.pixCode}>{pixCopyPaste}</Text>}
+            </View>
+          </View>
+        )}
 
         {/* Observações */}
         <View style={s.obsBlock}>

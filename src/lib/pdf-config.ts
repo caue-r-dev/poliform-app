@@ -4,6 +4,11 @@ export const PDF_CONFIG = {
   tagline: 'IMPRESSÃO 3D',
   cnpj: '63.487.264/0001-31',
 
+  // Pix (Copia e Cola estático — sem integração bancária, só o payload EMV)
+  pixKey: '63487264000131',
+  pixMerchantName: 'POLIFORM',
+  pixMerchantCity: 'Mogi Guacu',
+
   // Cores
   brand: '#1CA66B',      // verde principal (linha, bordas de tabela)
   brandDark: '#128352',  // verde escuro (valor total)

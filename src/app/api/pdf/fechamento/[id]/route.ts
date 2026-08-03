@@ -6,6 +6,9 @@ import FechamentoPDF from '@/lib/pdf/FechamentoPDF'
 import { createElement } from 'react'
 import fs from 'fs'
 import path from 'path'
+import QRCode from 'qrcode'
+import { buildPixPayload } from '@/lib/pix'
+import { PDF_CONFIG } from '@/lib/pdf-config'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,8 +46,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     logoDataUrl = `data:image/jpeg;base64,${logoBuf.toString('base64')}`
   } catch { /* logo opcional */ }
 
+  // QR Pix só faz sentido pra fechamento ainda não pago.
+  let pixQrDataUrl: string | undefined
+  let pixCopyPaste: string | undefined
+  if (f.status === 'pendente') {
+    pixCopyPaste = buildPixPayload({
+      pixKey: PDF_CONFIG.pixKey,
+      merchantName: PDF_CONFIG.pixMerchantName,
+      merchantCity: PDF_CONFIG.pixMerchantCity,
+      amount: Number(f.total),
+      txid: f.id,
+    })
+    pixQrDataUrl = await QRCode.toDataURL(pixCopyPaste, { margin: 1, width: 240 })
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stream = await renderToStream(createElement(FechamentoPDF, { fechamento: f as never, logoDataUrl }) as any)
+  const stream = await renderToStream(createElement(FechamentoPDF, { fechamento: f as never, logoDataUrl, pixQrDataUrl, pixCopyPaste }) as any)
 
   const nome = (f.reseller_snapshot as { nome: string }).nome.replace(/\s+/g, '_')
   const filename = `fechamento_${nome}_${id.slice(0, 8)}.pdf`
