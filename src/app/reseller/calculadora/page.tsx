@@ -45,12 +45,12 @@ export default async function CalculadoraPage() {
   })
 
   return (
-    <div style={{ padding: '28px 32px', flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Cálculadora p/ Precificação</h1>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Simule sua margem de lucro por produto e marketplace
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Cálculadora p/ Precificação</h1>
+          <p>Simule sua margem de lucro por produto e marketplace</p>
+        </div>
       </div>
 
       <CalculadoraMarketplacesView marketplaces={marketplaces} />

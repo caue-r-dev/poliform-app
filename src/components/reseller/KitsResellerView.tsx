@@ -66,18 +66,11 @@ export default function KitsResellerView({ products, kits }: { products: Product
   return (
     <>
       {/* ---- NOVO KIT ---- */}
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', marginBottom: 22,
-        boxShadow: 'var(--shadow)', overflow: 'hidden',
-      }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-            Novo Kit
-          </h2>
+      <div className="card" style={{ marginBottom: 22 }}>
+        <div className="card-head">
+          <h2>Novo Kit</h2>
         </div>
-        <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+        <form onSubmit={handleSubmit} className="card-body">
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 14, flexWrap: 'wrap' }}>
             <div className="field" style={{ minWidth: 220 }}>
               <label>Adicionar produto ao kit</label>
@@ -98,21 +91,13 @@ export default function KitsResellerView({ products, kits }: { products: Product
                 if (!p) return null
                 return (
                   <div key={item.productId} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12.5, fontWeight: 700 }}>
-                    <span style={{ flex: 1 }}>{p.nome} <span style={{ color: 'var(--ink-soft)' }}>· {p.sku}</span></span>
+                    <span style={{ flex: 1 }}>{p.nome} <span style={{ color: 'var(--soft)' }}>· {p.sku}</span></span>
                     <input
                       type="number" min="1" step="1" value={item.quantidade}
                       onChange={e => setItemQtd(item.productId, parseInt(e.target.value, 10) || 1)}
                       style={{ width: 70 }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.productId)}
-                      style={{
-                        border: 'none', background: 'var(--danger-light)', color: 'var(--danger)',
-                        borderRadius: '50%', width: 18, height: 18, fontSize: 12,
-                        fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0,
-                      }}
-                    >×</button>
+                    <button type="button" onClick={() => removeItem(item.productId)} className="chip-x">×</button>
                   </div>
                 )
               })}
@@ -130,11 +115,11 @@ export default function KitsResellerView({ products, kits }: { products: Product
             </div>
             <div className="field">
               <label>Preço de Repasse (calculado)</label>
-              <input readOnly value={precoRepasse ? fmtBRL(precoRepasse) : ''} className="field-readonly" style={{ fontWeight: 900, color: 'var(--brand-dark)' }} />
+              <input readOnly value={precoRepasse ? fmtBRL(precoRepasse) : ''} className="field-readonly" style={{ fontWeight: 900, color: 'var(--green)' }} />
             </div>
           </div>
 
-          {err && <p style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{err}</p>}
+          {err && <p style={{ color: 'var(--red)', fontWeight: 700, fontSize: 13, marginTop: 12 }}>{err}</p>}
           <div style={{ marginTop: 16 }}>
             <button type="submit" disabled={saving || items.length === 0} className="btn btn-primary">
               {saving ? 'Salvando…' : 'Salvar kit'}
@@ -149,20 +134,20 @@ export default function KitsResellerView({ products, kits }: { products: Product
           <span className="helper" style={{ margin: 0 }}>Você ainda não montou nenhum kit.</span>
         )}
         {kits.map(kit => (
-          <div key={kit.id} style={{ border: '1.5px solid var(--line)', borderRadius: 12, padding: '16px 18px', background: '#fff' }}>
+          <div key={kit.id} className="card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{kit.nome}</h3>
               <button onClick={() => handleDelete(kit.id, kit.nome)} className="btn btn-sm btn-danger-ghost">Remover</button>
             </div>
-            <p style={{ margin: '0 0 10px', fontSize: 12.5, fontWeight: 700, color: 'var(--ink-soft)' }}>
-              SKU: {kit.sku} · <span style={{ color: 'var(--brand-dark)' }}>{fmtBRL(kit.valor)}</span>
+            <p style={{ margin: '0 0 10px', fontSize: 12.5, fontWeight: 700, color: 'var(--soft)' }}>
+              SKU: {kit.sku} · <span style={{ color: 'var(--green)' }}>{fmtBRL(kit.valor)}</span>
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {kit.itens.map((it, i) => (
                 <span key={i} style={{
                   fontSize: 12, fontWeight: 700, padding: '4px 10px',
-                  borderRadius: 20, background: 'var(--paper)', border: '1px solid var(--line)',
-                  color: 'var(--ink-soft)',
+                  borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                  color: 'var(--soft)',
                 }}>
                   {it.quantidade}× {it.nome}
                 </span>

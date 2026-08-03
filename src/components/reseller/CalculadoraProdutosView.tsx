@@ -110,17 +110,17 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
           }}
         />
       </td>
-      <td className="mono" style={{ fontWeight: 900, color: margem != null && margem > 0 ? 'var(--brand-dark)' : margem != null ? 'var(--danger)' : undefined }}>
+      <td className="mono" style={{ fontWeight: 900, color: margem != null && margem > 0 ? 'var(--green)' : margem != null ? 'var(--red)' : undefined }}>
         {fmtPct(margem)}
       </td>
-      <td className="mono" style={{ fontWeight: 900, color: lucroReais != null && lucroReais > 0 ? 'var(--brand-dark)' : lucroReais != null ? 'var(--danger)' : undefined }}>
+      <td className="mono" style={{ fontWeight: 900, color: lucroReais != null && lucroReais > 0 ? 'var(--green)' : lucroReais != null ? 'var(--red)' : undefined }}>
         {fmtBRL(lucroReais)}
       </td>
     </tr>
     {saveErr && (
       <tr>
         <td colSpan={8} style={{ padding: '0 8px 8px' }}>
-          <p style={{ color: 'var(--danger)', fontSize: 12, margin: 0 }}>{saveErr}</p>
+          <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{saveErr}</p>
         </td>
       </tr>
     )}
@@ -130,7 +130,7 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
 
 export default function CalculadoraProdutosView({ products, marketplaces }: { products: Product[]; marketplaces: RankedMarketplace[] }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+    <div className="card">
       <div style={{ overflowX: 'auto' }}>
         <table>
           <thead>

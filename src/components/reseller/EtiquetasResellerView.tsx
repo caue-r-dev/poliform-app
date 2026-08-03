@@ -215,15 +215,10 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
   return (
     <>
       {/* Envio */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', marginBottom: 22, boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-            Enviar etiquetas
-          </h2>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--ink-soft)', fontWeight: 600 }}>
-            Envie uma ou várias fotos/PDFs — o produto e a cor são identificados pelo SKU lido na etiqueta. Confira antes de confirmar.
-          </p>
+      <div className="card" style={{ marginBottom: 22 }}>
+        <div className="card-head">
+          <h2 style={{ fontSize: 14 }}>Enviar etiquetas</h2>
+          <p>Envie uma ou várias fotos/PDFs — o produto e a cor são identificados pelo SKU lido na etiqueta. Confira antes de confirmar.</p>
         </div>
         <div style={{ padding: 18 }}>
           <input
@@ -234,7 +229,7 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
           <label htmlFor="etiqueta-files" className="btn btn-primary" style={{ cursor: 'pointer', display: 'inline-flex' }}>
             + Enviar etiqueta(s)
           </label>
-          {statusMsg && <p className="helper" style={{ color: 'var(--brand)' }}>{statusMsg}</p>}
+          {statusMsg && <p className="helper" style={{ color: 'var(--green)' }}>{statusMsg}</p>}
         </div>
 
         {queue.length > 0 && (
@@ -258,10 +253,10 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                       <td>
                         {it.previewUrl
                           ? <img src={it.previewUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />
-                          : <span style={{ display: 'inline-flex', width: 44, height: 44, alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', borderRadius: 6, border: '1px solid var(--line)', fontSize: 20 }}>📄</span>
+                          : <span style={{ display: 'inline-flex', width: 44, height: 44, alignItems: 'center', justifyContent: 'center', background: 'var(--card2)', borderRadius: 6, border: '1px solid var(--line)', fontSize: 20 }}>📄</span>
                         }
                         {it.totalPages && it.totalPages > 1 && (
-                          <div style={{ fontSize: 10.5, color: 'var(--ink-soft)', fontWeight: 700, marginTop: 3, textAlign: 'center' }}>
+                          <div style={{ fontSize: 10.5, color: 'var(--soft)', fontWeight: 700, marginTop: 3, textAlign: 'center' }}>
                             pág. {it.page}/{it.totalPages}
                           </div>
                         )}
@@ -290,7 +285,7 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                       </td>
                       <td>
                         {it.status === 'lendo' && <span className="tag tag-muted">Lendo…</span>}
-                        {it.status === 'erro' && <span className="tag" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>{it.error}</span>}
+                        {it.status === 'erro' && <span className="tag" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>{it.error}</span>}
                         {it.status === 'pronto' && it.matched && <span className="tag">SKU identificado</span>}
                         {it.status === 'pronto' && !it.matched && (
                           <span className="tag tag-warn">{it.error ?? 'Confirme manualmente'}</span>
@@ -306,9 +301,9 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
             </table>
             <div style={{ padding: '12px 14px 0' }}>
               <span style={{ fontSize: 13, fontWeight: 800 }}>
-                Valor total do pedido: <span style={{ color: 'var(--brand-dark)' }}>{fmtBRL(orderTotal)}</span>
+                Valor total do pedido: <span style={{ color: 'var(--green)' }}>{fmtBRL(orderTotal)}</span>
                 {identifiedItems.length < queue.length && (
-                  <span style={{ fontWeight: 700, color: 'var(--ink-soft)' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--soft)' }}>
                     {' '}({identifiedItems.length} de {queue.length} itens identificados)
                   </span>
                 )}
@@ -324,7 +319,7 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
       </div>
 
       {/* Lista já enviadas */}
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+      <div className="card">
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -348,17 +343,17 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                   <td>
                     {e.signedUrl
                       ? e.storage_path.endsWith('.pdf')
-                        ? <a href={e.signedUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', width: 48, height: 48, alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', borderRadius: 6, border: '1px solid var(--line)', fontSize: 22, textDecoration: 'none' }}>📄</a>
+                        ? <a href={e.signedUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', width: 48, height: 48, alignItems: 'center', justifyContent: 'center', background: 'var(--card2)', borderRadius: 6, border: '1px solid var(--line)', fontSize: 22, textDecoration: 'none' }}>📄</a>
                         : <a href={e.signedUrl} target="_blank" rel="noreferrer">
                             <img src={e.signedUrl} alt={e.sku} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />
                           </a>
-                      : <span style={{ display: 'inline-block', width: 48, height: 48, background: 'var(--paper)', borderRadius: 6, border: '1px dashed var(--line)' }} />
+                      : <span style={{ display: 'inline-block', width: 48, height: 48, background: 'var(--card2)', borderRadius: 6, border: '1px dashed var(--line)' }} />
                     }
                   </td>
                   <td>
                     <div style={{ fontWeight: 800, fontSize: 13 }}>{e.product_nome}</div>
                     <span className="tag tag-muted">{e.sku}</span>
-                    {e.cor_nome && <span style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginLeft: 4 }}>{e.cor_nome}</span>}
+                    {e.cor_nome && <span style={{ fontSize: 11.5, color: 'var(--soft)', marginLeft: 4 }}>{e.cor_nome}</span>}
                   </td>
                   <td className="mono">{e.qtd}</td>
                   <td style={{ fontSize: 12 }}>{fmtDT(e.data_upload)}</td>

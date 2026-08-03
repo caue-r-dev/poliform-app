@@ -28,18 +28,18 @@ export default async function ResellerFechamentosPage() {
     .order('data_emissao', { ascending: false })
 
   return (
-    <div style={{ padding: '28px 32px', flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Fechamentos</h1>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Extratos e histórico de pagamentos
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Fechamentos</h1>
+          <p>Extratos e histórico de pagamentos</p>
+        </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+      <div className="card">
         {(!fechamentos || fechamentos.length === 0) && (
-          <p style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--ink-soft)', fontWeight: 700, margin: 0 }}>
-            <span style={{ color: 'var(--brand)', fontSize: 22, display: 'block', marginBottom: 6 }}>✳</span>
+          <p style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--soft)', fontWeight: 700, margin: 0 }}>
+            <span style={{ color: 'var(--green)', fontSize: 22, display: 'block', marginBottom: 6 }}>✳</span>
             Nenhum fechamento emitido ainda.
           </p>
         )}
@@ -68,7 +68,7 @@ export default async function ResellerFechamentosPage() {
                   href={`/api/pdf/fechamento/${f.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, fontSize: 11.5, padding: '4px 10px', borderRadius: 6, border: '1.5px solid var(--line)', background: '#fff', color: 'var(--ink-soft)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 11.5, padding: '4px 10px', borderRadius: 6, border: '1.5px solid var(--line)', background: 'var(--card2)', color: 'var(--soft)', textDecoration: 'none', whiteSpace: 'nowrap' }}
                 >
                   PDF ↓
                 </a>
@@ -99,9 +99,9 @@ export default async function ResellerFechamentosPage() {
                       <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(i.total)}</td>
                     </tr>
                   ))}
-                  <tr style={{ background: 'var(--brand-light)' }}>
+                  <tr style={{ background: 'var(--up-bg)' }}>
                     <td colSpan={6} style={{ fontWeight: 800, textAlign: 'right', fontSize: 13 }}>Total</td>
-                    <td className="mono" style={{ fontWeight: 900, color: 'var(--brand-dark)' }}>{fmtBRL(Number(f.total))}</td>
+                    <td className="mono" style={{ fontWeight: 900, color: 'var(--green)' }}>{fmtBRL(Number(f.total))}</td>
                   </tr>
                 </tbody>
               </table>

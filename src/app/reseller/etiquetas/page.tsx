@@ -63,16 +63,14 @@ export default async function ResellerEtiquetasPage() {
   }))
 
   return (
-    <>
-      <div style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '18px 32px' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Minhas Etiquetas</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Envie a foto da etiqueta de postagem — o sistema identifica o produto pelo SKU automaticamente
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Minhas Etiquetas</h1>
+          <p>Envie a foto da etiqueta de postagem — o sistema identifica o produto pelo SKU automaticamente</p>
+        </div>
       </div>
-      <div style={{ padding: '28px 32px', flex: 1 }}>
-        <EtiquetasResellerView etiquetas={etiquetasComUrl} knownSkus={knownSkus} products={products} />
-      </div>
-    </>
+      <EtiquetasResellerView etiquetas={etiquetasComUrl} knownSkus={knownSkus} products={products} />
+    </div>
   )
 }

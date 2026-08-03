@@ -73,22 +73,23 @@ export default async function CatalogoPage() {
   kits.sort((a, b) => compareSku(a.sku, b.sku))
 
   return (
-    <div style={{ padding: '28px 32px', flex: 1 }}>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Catálogo</h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-            Produtos disponíveis para revenda
-          </p>
+          <h1>Catálogo</h1>
+          <p>Produtos disponíveis para revenda</p>
         </div>
-        <a
-          href="/api/pdf/catalogo"
-          target="_blank"
-          rel="noreferrer"
-          style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 13, padding: '9px 16px', borderRadius: 8, border: '1.5px solid var(--line)', background: '#fff', color: 'var(--ink)', textDecoration: 'none', display: 'inline-block' }}
-        >
-          Baixar PDF ↓
-        </a>
+        <div className="head-right">
+          <a
+            href="/api/pdf/catalogo"
+            target="_blank"
+            rel="noreferrer"
+            className="icon-btn"
+            style={{ width: 'auto', padding: '0 14px', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, textDecoration: 'none' }}
+          >
+            Baixar PDF ↓
+          </a>
+        </div>
       </div>
 
       <CatalogoResellerView products={products} kits={kits} />

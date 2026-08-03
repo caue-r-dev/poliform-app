@@ -44,12 +44,12 @@ export default async function ResellerKitsPage() {
   kits.sort((a, b) => compareSku(a.sku, b.sku))
 
   return (
-    <div style={{ padding: '28px 32px', flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 4px' }}>Montar Kit Personalizado</h1>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600 }}>
-          Monte seu próprio combo de produtos — preço de repasse calculado automaticamente
-        </p>
+    <div className="theme-kreatop" style={{ flex: 1, padding: 24 }}>
+      <div className="page-head">
+        <div>
+          <h1>Montar Kit Personalizado</h1>
+          <p>Monte seu próprio combo de produtos — preço de repasse calculado automaticamente</p>
+        </div>
       </div>
 
       <KitsResellerView products={products} kits={kits} />

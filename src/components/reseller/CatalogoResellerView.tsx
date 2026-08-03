@@ -55,10 +55,7 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
 
   return (
     <>
-    <div style={{
-      background: '#fff', border: '1px solid var(--line)',
-      borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
-    }}>
+    <div className="card">
       <div style={{ overflowX: 'auto' }}>
         <table>
           <thead>
@@ -119,15 +116,15 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                 </tr>,
 
                 colorsOpen && (
-                  <tr key={`${p.id}-cores`} style={{ background: 'var(--paper)' }}>
+                  <tr key={`${p.id}-cores`} className="row-expand">
                     <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.cores.length > 0
                           ? p.cores.map(c => (
                               <span key={c.codigo} style={{
                                 fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                                borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                                color: 'var(--ink-soft)',
+                                borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                                color: 'var(--soft)',
                               }}>
                                 {c.nome} <span style={{ opacity: .6 }}>· SKU: {p.sku}.{c.codigo}</span>
                               </span>
@@ -140,15 +137,15 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                 ),
 
                 midiaOpen && (
-                  <tr key={`${p.id}-midia`} style={{ background: 'var(--paper)' }}>
+                  <tr key={`${p.id}-midia`} className="row-expand">
                     <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {p.midias.length > 0
                           ? p.midias.map(m => (
                               <a key={m.url} href={m.url} target="_blank" rel="noreferrer" style={{
                                 fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                                borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                                color: 'var(--brand-dark)', textDecoration: 'none',
+                                borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                                color: 'var(--green)', textDecoration: 'none',
                               }}>
                                 {m.label} ↗
                               </a>
@@ -161,14 +158,14 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                 ),
 
                 fichaOpen && !fichaVazia && (
-                  <tr key={`${p.id}-ficha`} style={{ background: 'var(--paper)' }}>
+                  <tr key={`${p.id}-ficha`} className="row-expand">
                     <td colSpan={7} style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {material && (
                           <span style={{
                             fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                            borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                            color: 'var(--ink-soft)',
+                            borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                            color: 'var(--soft)',
                           }}>
                             Material: {material}
                           </span>
@@ -176,8 +173,8 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                         {pesoKg != null && (
                           <span style={{
                             fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                            borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                            color: 'var(--ink-soft)',
+                            borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                            color: 'var(--soft)',
                           }}>
                             Peso: {pesoKg} kg
                           </span>
@@ -185,8 +182,8 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                         {temMedidasProduto && (
                           <span style={{
                             fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                            borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                            color: 'var(--ink-soft)',
+                            borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                            color: 'var(--soft)',
                           }}>
                             Produto: {produtoComprimento} x {produtoAltura} cm
                           </span>
@@ -194,8 +191,8 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                         {temMedidas && (
                           <span style={{
                             fontSize: 12.5, fontWeight: 700, padding: '5px 12px',
-                            borderRadius: 20, background: '#fff', border: '1px solid var(--line)',
-                            color: 'var(--ink-soft)',
+                            borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                            color: 'var(--soft)',
                           }}>
                             Embalagem: {comprimento} x {largura} x {altura} cm
                           </span>
@@ -212,16 +209,9 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
     </div>
 
     {kits.length > 0 && (
-      <div style={{
-        background: '#fff', border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden',
-        marginTop: 22,
-      }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>
-            <span style={{ color: 'var(--brand)', marginRight: 6 }}>✳</span>
-            Kits disponíveis
-          </h2>
+      <div className="card" style={{ marginTop: 22 }}>
+        <div className="card-head">
+          <h2>Kits disponíveis</h2>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table>
@@ -241,8 +231,8 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                       {kit.itens.map((it, i) => (
                         <span key={i} style={{
                           fontSize: 11.5, fontWeight: 700, padding: '3px 9px',
-                          borderRadius: 20, background: 'var(--paper)', border: '1px solid var(--line)',
-                          color: 'var(--ink-soft)',
+                          borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
+                          color: 'var(--soft)',
                         }}>
                           {it.quantidade}× {it.nome}
                         </span>
