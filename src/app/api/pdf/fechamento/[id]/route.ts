@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   let logoDataUrl: string | undefined
   try {
-    const logoBuf = fs.readFileSync(path.join(process.cwd(), 'public', 'logo.jpeg'))
+    const logoBuf = fs.readFileSync(path.join(process.cwd(), 'public', 'logo-icon.jpg'))
     logoDataUrl = `data:image/jpeg;base64,${logoBuf.toString('base64')}`
   } catch { /* logo opcional */ }
 
