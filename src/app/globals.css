@@ -245,6 +245,21 @@ tbody tr:hover { background: #FAFCFB; }
 .theme-kreatop .field input:focus,
 .theme-kreatop .field select:focus,
 .theme-kreatop .field textarea:focus { border-color: var(--green); }
+
+/* Inputs/selects soltos dentro de tabela (sem wrapper .field) — mesmo
+   visual dark, senão ficam com estilo padrão do browser (invisíveis
+   no fundo escuro). */
+.theme-kreatop table input,
+.theme-kreatop table select {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  background: var(--card2); border: 1.5px solid var(--line); color: var(--ink);
+  border-radius: 6px; padding: 5px 8px; outline: none;
+}
+.theme-kreatop table input:focus,
+.theme-kreatop table select:focus { border-color: var(--green); }
+.theme-kreatop table input:disabled,
+.theme-kreatop table select:disabled { opacity: .5; cursor: not-allowed; }
 .theme-kreatop .field-readonly { background: var(--bg) !important; color: var(--soft) !important; }
 
 /* ---- TABLES (dark overrides) ---- */
