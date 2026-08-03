@@ -24,6 +24,7 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
   const [afiliados, setAfiliados] = useState(String(product.afiliadosPct))
   const [shopeeAcelera, setShopeeAcelera] = useState(String(product.shopeeAceleraPct))
   const [saveErr, setSaveErr] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const afiliadosNum = parseFloat(afiliados) || 0
@@ -64,18 +65,27 @@ function ProdutoRow({ product, marketplaces }: { product: Product; marketplaces:
       <td style={{ fontWeight: 800 }}>{product.nome}</td>
       <td className="mono">{fmtBRL(product.repasse)}</td>
       <td>
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          {marketplaces.map(m => (
-            <button
-              key={m.id}
-              onClick={() => { setMktId(m.id); scheduleSave({ mktId: m.id }) }}
-              className={`btn btn-sm ${mktId === m.id ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ fontSize: 11 }}
-            >
-              {m.nome}
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={() => setPickerOpen(v => !v)}
+          className="btn btn-sm btn-ghost"
+          style={{ fontSize: 11 }}
+        >
+          {selectedMkt ? selectedMkt.nome : 'Selecionar'} {pickerOpen ? '▲' : '▼'}
+        </button>
+        {pickerOpen && (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+            {marketplaces.map(m => (
+              <button
+                key={m.id}
+                onClick={() => { setMktId(m.id); scheduleSave({ mktId: m.id }); setPickerOpen(false) }}
+                className={`btn btn-sm ${mktId === m.id ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: 11 }}
+              >
+                {m.nome}
+              </button>
+            ))}
+          </div>
+        )}
       </td>
       <td>
         <input

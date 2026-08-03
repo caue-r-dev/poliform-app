@@ -43,6 +43,7 @@ export default function CalculadoraMarketplacesView({ marketplaces }: { marketpl
   const [nomeMkt, setNomeMkt] = useState('')
   const [addingMkt, setAddingMkt] = useState(false)
   const [mktErr, setMktErr] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   async function handleAddMkt(e: React.FormEvent) {
     e.preventDefault()
@@ -84,35 +85,52 @@ export default function CalculadoraMarketplacesView({ marketplaces }: { marketpl
         </form>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 18 }}>
-        {marketplaces.map(m => (
-          <div key={m.id} className="card" style={{ padding: '16px 18px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{m.nome}</h3>
-              <button onClick={() => handleDeleteMkt(m.id, m.nome)} className="btn btn-sm btn-danger-ghost">Remover</button>
-            </div>
+      {marketplaces.length === 0 && (
+        <span className="helper" style={{ margin: 0 }}>Nenhum marketplace cadastrado ainda.</span>
+      )}
 
-            {m.reseller_marketplace_tiers.length === 0 && (
-              <p className="helper" style={{ margin: '6px 0' }}>Nenhuma faixa cadastrada.</p>
-            )}
-            {[...m.reseller_marketplace_tiers].sort((a, b) => a.min - b.min).map(t => (
-              <div key={t.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
-                gap: 8, alignItems: 'center', padding: '7px 0',
-                borderBottom: '1px dashed var(--line)', fontSize: 12.5, fontWeight: 700,
-              }}>
-                <span>De {fmtBRL(t.min)}</span>
-                <span>até {fmtBRL(t.max)}</span>
-                <span>Fixo {fmtBRL(t.fixo)}</span>
-                <span>{Number(t.percentual)}%</span>
-                <button onClick={() => handleRemoveTier(t.id)} className="chip-x" style={{ borderRadius: 6, width: 26, height: 26, fontSize: 14 }}>×</button>
-              </div>
-            ))}
-
-            <TierForm marketplaceId={m.id} />
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: expandedId ? 14 : 0 }}>
+        {marketplaces.map(m => {
+          const isOpen = expandedId === m.id
+          return (
+            <button
+              key={m.id}
+              onClick={() => setExpandedId(isOpen ? null : m.id)}
+              className={`btn btn-sm ${isOpen ? 'btn-primary' : 'btn-ghost'}`}
+            >
+              {m.nome} · {m.reseller_marketplace_tiers.length} faixa{m.reseller_marketplace_tiers.length !== 1 ? 's' : ''} {isOpen ? '▲' : '▼'}
+            </button>
+          )
+        })}
       </div>
+
+      {expandedId && marketplaces.filter(m => m.id === expandedId).map(m => (
+        <div key={m.id} className="card" style={{ padding: '16px 18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900 }}>{m.nome}</h3>
+            <button onClick={() => handleDeleteMkt(m.id, m.nome)} className="btn btn-sm btn-danger-ghost">Remover</button>
+          </div>
+
+          {m.reseller_marketplace_tiers.length === 0 && (
+            <p className="helper" style={{ margin: '6px 0' }}>Nenhuma faixa cadastrada.</p>
+          )}
+          {[...m.reseller_marketplace_tiers].sort((a, b) => a.min - b.min).map(t => (
+            <div key={t.id} style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
+              gap: 8, alignItems: 'center', padding: '7px 0',
+              borderBottom: '1px dashed var(--line)', fontSize: 12.5, fontWeight: 700,
+            }}>
+              <span>De {fmtBRL(t.min)}</span>
+              <span>até {fmtBRL(t.max)}</span>
+              <span>Fixo {fmtBRL(t.fixo)}</span>
+              <span>{Number(t.percentual)}%</span>
+              <button onClick={() => handleRemoveTier(t.id)} className="chip-x" style={{ borderRadius: 6, width: 26, height: 26, fontSize: 14 }}>×</button>
+            </div>
+          ))}
+
+          <TierForm marketplaceId={m.id} />
+        </div>
+      ))}
     </>
   )
 }
