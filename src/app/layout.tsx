@@ -18,8 +18,12 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Poliform · Gestão de Revendedores',
-  description: 'Sistema de gestão de revendas Poliform',
+  title: 'NexForm · Gestão de Revendedores',
+  description: 'Sistema de gestão de revendas NexForm',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    title: 'NexForm',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

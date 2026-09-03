@@ -32,9 +32,9 @@ export default function ResellerSidebar({ nome }: { nome: string }) {
     <aside className="theme-kreatop sidebar" style={{ minHeight: '100vh' }}>
       <div className="brand">
         <div className="logo-slot">
-          <img src="/logo-icon.jpg" alt="Poliform" />
+          <img src="/logo-icon.jpg" alt="NexForm" />
         </div>
-        <div className="word">poliform</div>
+        <div className="word">nexform</div>
       </div>
 
       <nav>

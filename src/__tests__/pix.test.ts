@@ -16,7 +16,7 @@ describe('buildPixPayload', () => {
   it('monta payload EMV com CRC16 válido sobre os campos', () => {
     const payload = buildPixPayload({
       pixKey: '63487264000131',
-      merchantName: 'POLIFORM',
+      merchantName: 'NEXFORM',
       merchantCity: 'MOGI GUACU',
       amount: 70.48,
       txid: 'abc123',
@@ -30,11 +30,11 @@ describe('buildPixPayload', () => {
   it('inclui nome, cidade e valor com os tamanhos de campo corretos', () => {
     const payload = buildPixPayload({
       pixKey: '63487264000131',
-      merchantName: 'POLIFORM',
+      merchantName: 'NEXFORM',
       merchantCity: 'MOGI GUACU',
       amount: 70.48,
     })
-    expect(payload).toContain('5908POLIFORM')   // campo 59, tamanho 8, "POLIFORM"
+    expect(payload).toContain('5907NEXFORM')    // campo 59, tamanho 7, "NEXFORM"
     expect(payload).toContain('6010MOGI GUACU') // campo 60, tamanho 10
     expect(payload).toContain('540570.48')      // campo 54, tamanho 5, "70.48"
   })

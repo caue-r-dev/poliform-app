@@ -17,7 +17,7 @@ export default function ChangePasswordPage() {
           background: '#fff', border: '1px solid var(--line)', borderRadius: 10,
           padding: '10px 12px', margin: '0 auto 20px', maxWidth: 170,
         }}>
-          <img src="/logo.jpeg" alt="Poliform" style={{ width: '100%', objectFit: 'contain', display: 'block' }} />
+          <img src="/logo.jpeg" alt="NexForm" style={{ width: '100%', objectFit: 'contain', display: 'block' }} />
         </div>
 
         <h2 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 4px' }}>

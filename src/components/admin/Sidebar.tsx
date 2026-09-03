@@ -41,9 +41,9 @@ export default function Sidebar() {
     <aside className="theme-kreatop sidebar" style={{ minHeight: '100vh' }}>
       <div className="brand">
         <div className="logo-slot">
-          <img src="/logo-icon.jpg" alt="Poliform" />
+          <img src="/logo-icon.jpg" alt="NexForm" />
         </div>
-        <div className="word">poliform</div>
+        <div className="word">nexform</div>
       </div>
 
       <nav>
@@ -75,7 +75,7 @@ export default function Sidebar() {
             Sair
           </button>
         </form>
-        CNPJ 63.487.264/0001-31<br />poliform.nexvix.com.br
+        CNPJ 63.487.264/0001-31<br />nexform.nexvix.com.br
       </div>
     </aside>
   )

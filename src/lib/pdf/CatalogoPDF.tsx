@@ -63,7 +63,7 @@ export default function CatalogoPDF({ products, logoDataUrl }: { products: Produ
   const now = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
   return (
-    <Document title="Catálogo Poliform" author={C.empresa}>
+    <Document title="Catálogo NexForm" author={C.empresa}>
       <Page size="A4" style={s.page}>
 
         <View style={s.headerRow}>

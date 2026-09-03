@@ -48,7 +48,7 @@ export async function GET() {
   return new NextResponse(stream as unknown as ReadableStream, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="catalogo_poliform.pdf"',
+      'Content-Disposition': 'attachment; filename="catalogo_nexform.pdf"',
     },
   })
 }

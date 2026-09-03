@@ -1,12 +1,12 @@
 // Edite aqui para ajustar design e dados institucionais dos PDFs sem mexer na lógica de geração.
 export const PDF_CONFIG = {
-  empresa: 'POLIFORM',
+  empresa: 'NEXFORM',
   tagline: 'IMPRESSÃO 3D',
   cnpj: '63.487.264/0001-31',
 
   // Pix (Copia e Cola estático — sem integração bancária, só o payload EMV)
   pixKey: '63487264000131',
-  pixMerchantName: 'POLIFORM',
+  pixMerchantName: 'NEXFORM',
   pixMerchantCity: 'Mogi Guacu',
 
   // Cores
