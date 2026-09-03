@@ -206,8 +206,6 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products, 
     if (res.error) alert(res.error)
   }
 
-  const pendingCount = queue.filter(it => it.status === 'pronto').length
-
   // Total do pedido — soma valorUnitario (repasse) × qtd só dos itens com produto selecionado.
   // Preparação pro sistema de saldo/crédito: só exibição, nenhum débito é feito aqui.
   const identifiedItems = queue.filter(it => it.productId)
@@ -218,12 +216,19 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products, 
 
   // Cobertura do saldo, item a item, na ordem em que aparecem na fila —
   // cada item "reserva" do saldo restante; o que não cabe fica descoberto.
+  // Produto com custo unitário inválido (valorUnitario null) nunca é
+  // coberto — o servidor rejeita esse item de qualquer forma, então não
+  // faz sentido consumir saldo por ele nem marcá-lo como liberado.
   let saldoRestante = saldoDisponivel
   const coverage = new Map<string, { coberto: boolean; faltante: number }>()
   for (const it of queue) {
     if (it.status !== 'pronto' || !it.productId) continue
     const product = products.find(p => p.id === it.productId)
-    const valorItem = (product?.valorUnitario ?? 0) * it.qtd
+    if (product?.valorUnitario == null) {
+      coverage.set(it.localId, { coberto: false, faltante: 0 })
+      continue
+    }
+    const valorItem = product.valorUnitario * it.qtd
     if (valorItem <= saldoRestante) {
       coverage.set(it.localId, { coberto: true, faltante: 0 })
       saldoRestante -= valorItem
@@ -232,6 +237,10 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products, 
       saldoRestante = 0
     }
   }
+
+  // Deriva do mesmo predicado que handleConfirm usa — o botão nunca deve
+  // anunciar uma contagem maior do que realmente vai ser enviada.
+  const pendingCount = queue.filter(it => it.status === 'pronto' && coverage.get(it.localId)?.coberto).length
 
   return (
     <>
@@ -311,7 +320,12 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products, 
                         {it.status === 'pronto' && !it.matched && (
                           <span className="tag tag-warn">{it.error ?? 'Confirme manualmente'}</span>
                         )}
-                        {it.status === 'pronto' && it.productId && (
+                        {it.status === 'pronto' && it.productId && product?.valorUnitario == null && (
+                          <div style={{ marginTop: 4 }}>
+                            <span className="tag" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>Custo unitário inválido — verifique o produto</span>
+                          </div>
+                        )}
+                        {it.status === 'pronto' && it.productId && product?.valorUnitario != null && (
                           coverage.get(it.localId)?.coberto
                             ? <div style={{ marginTop: 4 }}><span className="tag">✓ Coberto pelo saldo</span></div>
                             : <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>

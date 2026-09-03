@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 test-files/
+
+# tesseract.js baixa o modelo de idioma pra raiz do projeto em runtime
+# (OCR de comprovante Pix rodando no servidor) — não é código, não versiona
+*.traineddata

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import QRCode from 'qrcode'
 import { buildPixPayload } from '@/lib/pix'
 import { PDF_CONFIG } from '@/lib/pdf-config'
+import { parseValorPago, parseDataHoraPagamento, dataHoraDentroDoPrazo } from '@/lib/pixReceiptParse'
 
 async function currentResellerId() {
   const supabase = await createClient()
@@ -14,6 +15,16 @@ async function currentResellerId() {
   const { data: reseller } = await adminClient
     .from('resellers').select('id').eq('auth_user_id', user.id).single()
   return reseller?.id ?? null
+}
+
+// aprovarDeposito/rejeitarDeposito movem dinheiro — nunca confiar só na tela
+// que chama (o id da action vaza pro bundle client, um revendedor autenticado
+// consegue invocar diretamente). Mesma fonte de verdade que src/proxy.ts usa
+// pra gatear /admin/*.
+async function currentIsAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.app_metadata?.role === 'admin'
 }
 
 export async function getSaldoDisponivel(resellerId: string): Promise<number> {
@@ -31,7 +42,12 @@ export async function getSaldoDisponivel(resellerId: string): Promise<number> {
 export async function criarDeposito(valor: number) {
   const resellerId = await currentResellerId()
   if (!resellerId) return { error: 'Revendedor não encontrado.' }
-  if (!valor || valor <= 0) return { error: 'Valor inválido.' }
+  if (!valor || !Number.isFinite(valor) || valor <= 0) return { error: 'Valor inválido.' }
+  if (valor > 100000) return { error: 'Valor muito alto — fale com o admin pra depósitos grandes.' }
+  // Arredonda pra centavos — o payload Pix e a coluna numeric(10,2) já
+  // truncam nesse limite, arredondar aqui evita divergência entre o que
+  // aparece na tela e o valor realmente gravado/cobrado no QR Code.
+  valor = Math.round(valor * 100) / 100
 
   const { data: tx, error } = await adminClient
     .from('credit_transactions')
@@ -54,19 +70,76 @@ export async function criarDeposito(valor: number) {
   return { ok: true as const, id: tx.id, pixCopiaCola, pixQrDataUrl }
 }
 
-export async function enviarComprovante(transactionId: string, storagePath: string, valorOcrLido: number | null) {
+// Lê o valor pago diretamente do arquivo salvo no Storage — nunca aceita um
+// valor "já lido" vindo do client (um revendedor conseguiria forjar OCR via
+// devtools e creditar saldo sem pagar nada). O OCR roda aqui, no servidor,
+// sobre o arquivo que o próprio upload já gravou no bucket.
+export async function enviarComprovante(transactionId: string, storagePath: string) {
   const resellerId = await currentResellerId()
   if (!resellerId) return { error: 'Revendedor não encontrado.' }
 
   const { data: tx } = await adminClient
     .from('credit_transactions')
-    .select('id, reseller_id, valor, status')
+    .select('id, reseller_id, valor, status, criado_em')
     .eq('id', transactionId)
     .single()
   if (!tx || tx.reseller_id !== resellerId) return { error: 'Depósito não encontrado.' }
   if (tx.status !== 'pendente') return { error: 'Depósito já processado.' }
 
-  const bate = valorOcrLido != null && Math.abs(valorOcrLido - Number(tx.valor)) < 0.005
+  // storagePath sempre começa com "{reseller_id}/..." (rota de upload monta
+  // assim) — bloqueia um path de outro revendedor sendo reaproveitado aqui.
+  if (!storagePath.startsWith(`${resellerId}/`)) return { error: 'Comprovante inválido.' }
+
+  const { data: fileBlob, error: downloadError } = await adminClient.storage
+    .from('comprovantes')
+    .download(storagePath)
+  if (downloadError || !fileBlob) return { error: 'Falha ao ler o comprovante enviado.' }
+
+  const bytes = Buffer.from(await fileBlob.arrayBuffer())
+  const isPDF = storagePath.toLowerCase().endsWith('.pdf')
+
+  let text = ''
+  if (isPDF) {
+    try {
+      const { PDFParse } = await import('pdf-parse')
+      const parser = new PDFParse({ data: bytes })
+      const result = await parser.getText()
+      text = result.pages[0]?.text ?? ''
+      await parser.destroy()
+    } catch (err) {
+      console.error('pdf-parse falhou (comprovante):', err)
+    }
+  } else {
+    try {
+      const path = await import('path')
+      const { createWorker } = await import('tesseract.js')
+      // tesseract.js resolve o worker-script via __dirname, que o bundler
+      // do Next.js (server action) reescreve pra um caminho que não existe
+      // em disco — passa o path real (relativo a process.cwd(), que continua
+      // correto em runtime) explicitamente pra não depender disso.
+      const workerPath = path.join(process.cwd(), 'node_modules/tesseract.js/src/worker-script/node/index.js')
+      const worker = await createWorker('por', 1, { workerPath })
+      const { data } = await worker.recognize(bytes)
+      await worker.terminate()
+      text = data.text
+    } catch (err) {
+      console.error('OCR falhou (comprovante):', err)
+    }
+  }
+
+  const valorOcrLido = parseValorPago(text)
+  const valorBate = valorOcrLido != null && Math.abs(valorOcrLido - Number(tx.valor)) < 0.005
+
+  // Rejeita Pix agendado ou comprovante reaproveitado: a data/hora impressa
+  // no comprovante precisa estar a até 30 min de quando o depósito foi
+  // solicitado (não bate quando pago com agendamento pra outro dia/horário,
+  // ou quando é um comprovante velho sendo reenviado). Sem data legível no
+  // comprovante, não bloqueia sozinho — só o valor decide (mesmo padrão de
+  // "não engole erro, mas também não trava por causa de OCR incompleto").
+  const dataComprovante = parseDataHoraPagamento(text)
+  const dataBate = dataComprovante == null || dataHoraDentroDoPrazo(dataComprovante, new Date(tx.criado_em))
+
+  const bate = valorBate && dataBate
   const status: 'confirmado' | 'revisao' = bate ? 'confirmado' : 'revisao'
 
   const { error } = await adminClient
@@ -78,6 +151,7 @@ export async function enviarComprovante(transactionId: string, storagePath: stri
       confirmado_em: bate ? new Date().toISOString() : null,
     })
     .eq('id', transactionId)
+    .eq('status', 'pendente')
   if (error) return { error: error.message }
 
   revalidatePath('/reseller/creditos')
@@ -87,6 +161,7 @@ export async function enviarComprovante(transactionId: string, storagePath: stri
 }
 
 export async function aprovarDeposito(id: string) {
+  if (!(await currentIsAdmin())) return { error: 'Acesso negado.' }
   const { error } = await adminClient
     .from('credit_transactions')
     .update({ status: 'confirmado', confirmado_em: new Date().toISOString() })
@@ -99,6 +174,7 @@ export async function aprovarDeposito(id: string) {
 }
 
 export async function rejeitarDeposito(id: string) {
+  if (!(await currentIsAdmin())) return { error: 'Acesso negado.' }
   const { error } = await adminClient
     .from('credit_transactions')
     .update({ status: 'rejeitado' })

@@ -157,12 +157,44 @@ export async function deleteEtiqueta(id: string) {
   if (error) return { error: error.message }
 
   if (etiqueta?.sale_id) {
-    await adminClient.from('sales').delete().eq('id', etiqueta.sale_id).is('fechamento_id', null)
+    // Busca o débito ANTES de apagar a venda — sale_id na linha de débito é
+    // "on delete set null", então depois do delete não dá mais pra achar
+    // qual débito era daquela venda.
+    const { data: debito } = await adminClient
+      .from('credit_transactions')
+      .select('id, valor, reseller_id')
+      .eq('sale_id', etiqueta.sale_id)
+      .eq('tipo', 'debito')
+      .maybeSingle()
+
+    const { data: deletedSales } = await adminClient
+      .from('sales')
+      .delete()
+      .eq('id', etiqueta.sale_id)
+      .is('fechamento_id', null)
+      .select('id')
+
+    // Só reverte o crédito se a venda realmente foi apagada (mesma condição
+    // fechamento_id null de antes) — sem isso o revendedor perdia o valor
+    // debitado pra sempre ao remover uma etiqueta já confirmada. Reversão
+    // vira um depósito já confirmado (nunca edita/apaga o débito original),
+    // mantendo o ledger auditável.
+    if (debito && deletedSales && deletedSales.length > 0) {
+      await adminClient.from('credit_transactions').insert({
+        reseller_id: debito.reseller_id,
+        tipo: 'deposito',
+        valor: debito.valor,
+        status: 'confirmado',
+        confirmado_em: new Date().toISOString(),
+      })
+    }
   }
 
   revalidatePath('/reseller/etiquetas')
   revalidatePath('/admin/etiquetas')
   revalidatePath('/admin/vendas')
   revalidatePath('/reseller')
+  revalidatePath('/reseller/creditos')
+  revalidatePath('/admin/creditos')
   return { ok: true }
 }

@@ -43,14 +43,16 @@ export default function CreditosAdminView({ depositos }: { depositos: Deposito[]
 
   async function handleAprovar(id: string) {
     setBusy(id)
-    await aprovarDeposito(id)
+    const res = await aprovarDeposito(id)
     setBusy(null)
+    if (res.error) alert(res.error)
   }
   async function handleRejeitar(id: string) {
     if (!confirm('Rejeitar este depósito?')) return
     setBusy(id)
-    await rejeitarDeposito(id)
+    const res = await rejeitarDeposito(id)
     setBusy(null)
+    if (res.error) alert(res.error)
   }
 
   return (

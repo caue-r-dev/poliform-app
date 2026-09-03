@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { criarDeposito, enviarComprovante } from '@/app/actions/creditos'
-import { parseValorPago } from '@/lib/pixReceiptParse'
 
 type Deposito = {
   id: string
@@ -64,19 +63,10 @@ function NovoDepositoForm({ saldoDisponivel }: { saldoDisponivel: number }) {
       setErr(uploadJson.error ?? 'Erro no upload.'); setEnviando(false); return
     }
 
-    let text = ''
-    if (uploadJson.isPDF) {
-      text = uploadJson.pageText ?? ''
-    } else {
-      const { createWorker } = await import('tesseract.js')
-      const worker = await createWorker('por')
-      const { data } = await worker.recognize(file)
-      await worker.terminate()
-      text = data.text
-    }
-
-    const valorLido = parseValorPago(text)
-    const res = await enviarComprovante(pending.id, uploadJson.path, valorLido)
+    // Leitura do valor pago acontece no servidor (enviarComprovante), nunca
+    // confiando num valor calculado no client — evita creditar saldo sem
+    // pagamento real de fato verificado.
+    const res = await enviarComprovante(pending.id, uploadJson.path)
     setEnviando(false)
     if ('error' in res) { setErr(res.error ?? ''); return }
     setResultado(res.status)
