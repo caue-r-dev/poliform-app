@@ -3,6 +3,7 @@ import { adminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import EtiquetasResellerView from '@/components/reseller/EtiquetasResellerView'
 import { calcCustoUnitario } from '@/lib/calc'
+import { getSaldoDisponivel } from '@/app/actions/creditos'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export default async function ResellerEtiquetasPage() {
     .single()
   if (!reseller) redirect('/login')
 
-  const [{ data: etiquetas }, { data: rawProducts }] = await Promise.all([
+  const [{ data: etiquetas }, { data: rawProducts }, saldoDisponivel] = await Promise.all([
     adminClient
       .from('etiquetas')
       .select('id, sku, product_nome, cor_nome, qtd, storage_path, status, data_upload, data_impressao')
@@ -28,6 +29,7 @@ export default async function ResellerEtiquetasPage() {
       .from('products')
       .select('id, nome, sku, custo_producao, margem_producao, product_cores(cor_id, cores_globais(nome, codigo))')
       .order('nome'),
+    getSaldoDisponivel(reseller.id),
   ])
 
   // Gera URLs assinadas server-side (1h)
@@ -70,7 +72,7 @@ export default async function ResellerEtiquetasPage() {
           <p>Envie a foto da etiqueta de postagem — o sistema identifica o produto pelo SKU automaticamente</p>
         </div>
       </div>
-      <EtiquetasResellerView etiquetas={etiquetasComUrl} knownSkus={knownSkus} products={products} />
+      <EtiquetasResellerView etiquetas={etiquetasComUrl} knownSkus={knownSkus} products={products} saldoDisponivel={saldoDisponivel} />
     </div>
   )
 }

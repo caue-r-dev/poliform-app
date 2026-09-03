@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getSaldoDisponivel } from '@/app/actions/creditos'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,7 @@ export default async function ResellerDashboard() {
     { data: salesSum },
     { count: etiquetasPendentes },
     { data: fechamentosPendentes },
+    saldoCreditos,
   ] = await Promise.all([
     adminClient.from('sales').select('*', { count: 'exact', head: true }).eq('reseller_id', reseller.id),
     adminClient.from('sales').select('total').eq('reseller_id', reseller.id),
@@ -31,6 +33,7 @@ export default async function ResellerDashboard() {
       .eq('reseller_id', reseller.id).eq('status', 'pendente'),
     adminClient.from('fechamentos').select('id, total, periodo_inicio, periodo_fim, data_emissao')
       .eq('reseller_id', reseller.id).eq('status', 'pendente').order('data_emissao', { ascending: false }),
+    getSaldoDisponivel(reseller.id),
   ])
 
   const totalRepasse = (salesSum ?? []).reduce((acc, s) => acc + Number(s.total), 0)
@@ -51,6 +54,9 @@ export default async function ResellerDashboard() {
     aberto: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
     ),
+    creditos: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.5"/></svg>
+    ),
   }
 
   const cards = [
@@ -58,6 +64,7 @@ export default async function ResellerDashboard() {
     { label: 'Total repassado', value: fmtBRL(totalRepasse), icon: ICONS.repassado, color: 'var(--green)', bg: 'var(--up-bg)' },
     { label: 'Etiquetas pendentes', value: String(etiquetasPendentes ?? 0), icon: ICONS.etiquetas, color: 'var(--amber)', bg: 'var(--amber-bg)' },
     { label: 'Em aberto', value: fmtBRL(totalAberto), icon: ICONS.aberto, color: 'var(--red)', bg: 'var(--red-bg)' },
+    { label: 'Saldo em créditos', value: fmtBRL(saldoCreditos), icon: ICONS.creditos, color: 'var(--green)', bg: 'var(--up-bg)' },
   ]
 
   return (

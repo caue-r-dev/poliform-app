@@ -17,6 +17,9 @@ const NAV = [
   { href: '/reseller/kits', label: 'Montar Kit', icon: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
   ) },
+  { href: '/reseller/creditos', label: 'Créditos', icon: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.5"/></svg>
+  ) },
   { href: '/reseller/etiquetas', label: 'Etiquetas', icon: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.5 13.5L13.5 20.5a2 2 0 0 1-2.8 0l-7-7a2 2 0 0 1 0-2.8L10.7 3.7a2 2 0 0 1 1.4-.6H19a1.5 1.5 0 0 1 1.5 1.5v6.6a2 2 0 0 1-.6 1.4z"/></svg>
   ) },
