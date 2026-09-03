@@ -4,7 +4,7 @@ import { adminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { calcCustoUnitario } from '@/lib/calc'
-import { suggestKitSkuMesmoProduto, suggestKitSkuPersonalizado } from '@/lib/kitSku'
+import { suggestKitSkuMesmoProduto, suggestKitSkuPersonalizado, buildKitUnidades } from '@/lib/kitSku'
 
 async function currentResellerId() {
   const supabase = await createClient()
@@ -50,19 +50,36 @@ export async function createKitMesmoProduto(productId: string, quantidade: numbe
   return { ok: true }
 }
 
-export async function suggestPersonalizadoSku(productIds: string[]) {
-  if (productIds.length === 0) return { sku: '' }
+export async function suggestPersonalizadoSku(
+  items: { productId: string; corId: string | null; quantidade: number }[],
+) {
+  if (items.length === 0) return { sku: '' }
   const { data: products } = await adminClient
-    .from('products').select('id, sku').in('id', productIds)
+    .from('products').select('id, sku').in('id', items.map(i => i.productId))
   if (!products) return { sku: '' }
-  const bySku = new Map(products.map(p => [p.id, p.sku]))
-  const skus = productIds.map(id => bySku.get(id)).filter((s): s is string => !!s)
-  return { sku: suggestKitSkuPersonalizado(skus) }
+  const skuById = new Map(products.map(p => [p.id, p.sku]))
+
+  const corIds = items.map(i => i.corId).filter((id): id is string => !!id)
+  let codigoByCorId = new Map<string, string>()
+  if (corIds.length > 0) {
+    const { data: cores } = await adminClient.from('cores_globais').select('id, codigo').in('id', corIds)
+    codigoByCorId = new Map((cores ?? []).map(c => [c.id, c.codigo]))
+  }
+
+  const unidadesInput = items
+    .map(i => ({
+      productSku: skuById.get(i.productId),
+      corCodigo: i.corId ? codigoByCorId.get(i.corId) ?? null : null,
+      quantidade: i.quantidade,
+    }))
+    .filter((i): i is { productSku: string; corCodigo: string | null; quantidade: number } => !!i.productSku)
+
+  return { sku: suggestKitSkuPersonalizado(buildKitUnidades(unidadesInput)) }
 }
 
 export async function createKitPersonalizado(
   nome: string,
-  items: { productId: string; quantidade: number }[],
+  items: { productId: string; corId: string | null; quantidade: number }[],
   precoRepasse: number,
   skuOverride?: string,
 ) {
@@ -74,7 +91,7 @@ export async function createKitPersonalizado(
 
   let sku = skuOverride?.trim()
   if (!sku) {
-    const { sku: suggested } = await suggestPersonalizadoSku(items.map(i => i.productId))
+    const { sku: suggested } = await suggestPersonalizadoSku(items)
     sku = suggested
   }
   if (!sku) return { error: 'Não foi possível gerar SKU.' }
@@ -88,7 +105,7 @@ export async function createKitPersonalizado(
 
   const { error: itemsError } = await adminClient
     .from('kit_items')
-    .insert(items.map(i => ({ kit_id: kit.id, product_id: i.productId, quantidade: i.quantidade })))
+    .insert(items.map(i => ({ kit_id: kit.id, product_id: i.productId, cor_id: i.corId, quantidade: i.quantidade })))
   if (itemsError) {
     await adminClient.from('kits').delete().eq('id', kit.id)
     return { error: itemsError.message }
@@ -124,11 +141,7 @@ export async function deleteKit(kitId: string) {
   return { ok: true }
 }
 
-// Kit montado pelo próprio revendedor. Diferente do kit personalizado do admin:
-// preco_repasse NUNCA é digitado — é sempre a soma (repasse do produto × quantidade)
-// de cada item, recalculada aqui no server (nunca confia no valor que o client mandou).
-// SKU também não aceita override — sempre o gerado pela mesma regra do admin.
-export async function createKitReseller(nome: string, items: { productId: string; quantidade: number }[]) {
+export async function createKitReseller(nome: string, items: { productId: string; corId: string | null; quantidade: number }[]) {
   nome = nome.trim()
   if (!nome) return { error: 'Nome do kit obrigatório.' }
   if (items.length === 0) return { error: 'Selecione ao menos um produto.' }
@@ -143,9 +156,8 @@ export async function createKitReseller(nome: string, items: { productId: string
     .in('id', items.map(i => i.productId))
   if (prodError || !products || products.length !== items.length) return { error: 'Produto não encontrado.' }
 
-  const bySku = new Map(products.map(p => [p.id, p.sku]))
-  const skus = items.map(i => bySku.get(i.productId)).filter((s): s is string => !!s)
-  const sku = suggestKitSkuPersonalizado(skus)
+  const { sku } = await suggestPersonalizadoSku(items)
+  if (!sku) return { error: 'Não foi possível gerar SKU.' }
   if (await skuExists(sku)) return { error: `Já existe kit com SKU "${sku}".` }
 
   let precoRepasse = 0
@@ -165,7 +177,7 @@ export async function createKitReseller(nome: string, items: { productId: string
 
   const { error: itemsError } = await adminClient
     .from('kit_items')
-    .insert(items.map(i => ({ kit_id: kit.id, product_id: i.productId, quantidade: i.quantidade })))
+    .insert(items.map(i => ({ kit_id: kit.id, product_id: i.productId, cor_id: i.corId, quantidade: i.quantidade })))
   if (itemsError) {
     await adminClient.from('kits').delete().eq('id', kit.id)
     return { error: itemsError.message }
