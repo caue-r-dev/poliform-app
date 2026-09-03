@@ -4,6 +4,7 @@ import { adminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { calcCustoUnitario } from '@/lib/calc'
 import { revalidatePath } from 'next/cache'
+import { getSaldoDisponivel } from './creditos'
 
 export type EtiquetaFormData = {
   storage_path: string
@@ -40,6 +41,12 @@ export async function createEtiqueta(data: EtiquetaFormData) {
 
   const valor_unitario = calcCustoUnitario(product.custo_producao, product.margem_producao)
   if (valor_unitario == null) return { error: 'Custo unitário inválido — verifique margem de produção do produto.' }
+
+  const valorNecessario = valor_unitario * data.qtd
+  const saldo = await getSaldoDisponivel(reseller.id)
+  if (saldo < valorNecessario) {
+    return { error: 'Saldo insuficiente — deposite antes de confirmar esta etiqueta.' }
+  }
 
   let sku = product.sku
   let cor_nome: string | null = null
@@ -86,10 +93,26 @@ export async function createEtiqueta(data: EtiquetaFormData) {
     return { error: etiquetaErr.message }
   }
 
+  const { error: debitoErr } = await adminClient.from('credit_transactions').insert({
+    reseller_id: reseller.id,
+    tipo: 'debito',
+    valor: valorNecessario,
+    status: 'confirmado',
+    sale_id: sale.id,
+  })
+
+  if (debitoErr) {
+    await adminClient.from('etiquetas').delete().eq('sale_id', sale.id)
+    await adminClient.from('sales').delete().eq('id', sale.id)
+    return { error: debitoErr.message }
+  }
+
   revalidatePath('/reseller/etiquetas')
   revalidatePath('/admin/etiquetas')
   revalidatePath('/admin/vendas')
   revalidatePath('/reseller')
+  revalidatePath('/reseller/creditos')
+  revalidatePath('/admin/creditos')
   return { ok: true }
 }
 

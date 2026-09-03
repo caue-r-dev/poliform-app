@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Link from 'next/link'
 import { createEtiqueta, deleteEtiqueta } from '@/app/actions/etiquetas'
 import { matchSku, parseQtd, type KnownSku } from '@/lib/labelParse'
 
@@ -40,10 +41,11 @@ const fmtDT = (s: string) => new Date(s).toLocaleString('pt-BR', { dateStyle: 's
 const fmtBRL = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const uid = () => Math.random().toString(36).slice(2)
 
-export default function EtiquetasResellerView({ etiquetas, knownSkus, products }: {
+export default function EtiquetasResellerView({ etiquetas, knownSkus, products, saldoDisponivel }: {
   etiquetas: Etiqueta[]
   knownSkus: KnownSku[]
   products: Product[]
+  saldoDisponivel: number
 }) {
   const [queue, setQueue] = useState<QueueItem[]>([])
   const [statusMsg, setStatusMsg] = useState('')
@@ -179,7 +181,9 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
   }
 
   async function handleConfirm() {
-    const ready = queue.filter(it => it.status === 'pronto' && it.storagePath && it.productId)
+    const ready = queue.filter(it =>
+      it.status === 'pronto' && it.storagePath && it.productId && coverage.get(it.localId)?.coberto
+    )
     if (ready.length === 0) return
     setConfirming(true)
     for (const it of ready) {
@@ -211,6 +215,23 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
     const product = products.find(p => p.id === it.productId)
     return sum + (product?.valorUnitario ?? 0) * it.qtd
   }, 0)
+
+  // Cobertura do saldo, item a item, na ordem em que aparecem na fila —
+  // cada item "reserva" do saldo restante; o que não cabe fica descoberto.
+  let saldoRestante = saldoDisponivel
+  const coverage = new Map<string, { coberto: boolean; faltante: number }>()
+  for (const it of queue) {
+    if (it.status !== 'pronto' || !it.productId) continue
+    const product = products.find(p => p.id === it.productId)
+    const valorItem = (product?.valorUnitario ?? 0) * it.qtd
+    if (valorItem <= saldoRestante) {
+      coverage.set(it.localId, { coberto: true, faltante: 0 })
+      saldoRestante -= valorItem
+    } else {
+      coverage.set(it.localId, { coberto: false, faltante: valorItem - saldoRestante })
+      saldoRestante = 0
+    }
+  }
 
   return (
     <>
@@ -289,6 +310,20 @@ export default function EtiquetasResellerView({ etiquetas, knownSkus, products }
                         {it.status === 'pronto' && it.matched && <span className="tag">SKU identificado</span>}
                         {it.status === 'pronto' && !it.matched && (
                           <span className="tag tag-warn">{it.error ?? 'Confirme manualmente'}</span>
+                        )}
+                        {it.status === 'pronto' && it.productId && (
+                          coverage.get(it.localId)?.coberto
+                            ? <div style={{ marginTop: 4 }}><span className="tag">✓ Coberto pelo saldo</span></div>
+                            : <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                                <span className="tag tag-warn">Faltam {fmtBRL(coverage.get(it.localId)?.faltante ?? 0)}</span>
+                                <Link
+                                  href={`/reseller/creditos?valor=${(coverage.get(it.localId)?.faltante ?? 0).toFixed(2)}`}
+                                  className="btn btn-sm btn-ghost"
+                                  style={{ textDecoration: 'none' }}
+                                >
+                                  Depositar
+                                </Link>
+                              </div>
                         )}
                       </td>
                       <td>
