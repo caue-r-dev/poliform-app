@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from 'react'
 
-type KitItemRow = { quantidade: number; products: { nome: string; sku: string } | { nome: string; sku: string }[] }
+type KitItemRow = {
+  quantidade: number
+  products: { nome: string; sku: string } | { nome: string; sku: string }[]
+  cores_globais: { nome: string; codigo: string } | { nome: string; codigo: string }[] | null
+}
 
 type Kit = {
   id: string
@@ -22,6 +26,11 @@ function resellerNome(kit: Kit) {
 
 function itemProduct(row: KitItemRow) {
   return Array.isArray(row.products) ? row.products[0] : row.products
+}
+
+function itemCor(row: KitItemRow) {
+  if (!row.cores_globais) return null
+  return Array.isArray(row.cores_globais) ? row.cores_globais[0] ?? null : row.cores_globais
 }
 
 export default function KitsRevendedoresView({ kits }: { kits: Kit[] }) {
@@ -74,13 +83,14 @@ export default function KitsRevendedoresView({ kits }: { kits: Kit[] }) {
                       {kit.kit_items.map((row, i) => {
                         const p = itemProduct(row)
                         if (!p) return null
+                        const cor = itemCor(row)
                         return (
                           <span key={i} style={{
                             fontSize: 11.5, fontWeight: 700, padding: '3px 9px',
                             borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
                             color: 'var(--soft)',
                           }}>
-                            {row.quantidade}× {p.nome} <span style={{ opacity: .7 }}>· {p.sku}</span>
+                            {row.quantidade}× {p.nome}{cor ? ` — ${cor.nome}` : ''} <span style={{ opacity: .7 }}>· {p.sku}</span>
                           </span>
                         )
                       })}

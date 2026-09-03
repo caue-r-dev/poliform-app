@@ -25,7 +25,7 @@ export default async function CatalogoPage() {
       .order('nome'),
     adminClient
       .from('kits')
-      .select('id, sku, nome, preco_repasse, kit_items(quantidade, products(nome, sku))')
+      .select('id, sku, nome, preco_repasse, kit_items(quantidade, products(nome, sku), cores_globais(nome, codigo))')
       .is('reseller_id', null),
   ])
 
@@ -65,9 +65,13 @@ export default async function CatalogoPage() {
     sku: k.sku,
     nome: k.nome,
     valor: k.preco_repasse,
-    itens: (k.kit_items ?? []).flatMap(item => {
+    itens: (k.kit_items ?? []).flatMap((item: { quantidade: number; products: unknown; cores_globais: unknown }) => {
       const prod = Array.isArray(item.products) ? item.products[0] : item.products
-      return prod ? [{ nome: prod.nome, sku: prod.sku, quantidade: item.quantidade }] : []
+      const cor = Array.isArray(item.cores_globais) ? item.cores_globais[0] : item.cores_globais
+      if (!prod) return []
+      const p = prod as { nome: string; sku: string }
+      const c = cor as { nome: string } | null
+      return [{ nome: p.nome, sku: p.sku, corNome: c?.nome ?? null, quantidade: item.quantidade }]
     }),
   }))
   kits.sort((a, b) => compareSku(a.sku, b.sku))

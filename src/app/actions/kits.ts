@@ -150,11 +150,24 @@ export async function createKitReseller(nome: string, items: { productId: string
   const resellerId = await currentResellerId()
   if (!resellerId) return { error: 'Revendedor não encontrado.' }
 
+  const productIds = [...new Set(items.map(i => i.productId))]
   const { data: products, error: prodError } = await adminClient
     .from('products')
     .select('id, sku, custo_producao, margem_producao')
-    .in('id', items.map(i => i.productId))
-  if (prodError || !products || products.length !== items.length) return { error: 'Produto não encontrado.' }
+    .in('id', productIds)
+  if (prodError || !products || products.length !== productIds.length) return { error: 'Produto não encontrado.' }
+
+  const corIds = items.map(i => i.corId).filter((id): id is string => !!id)
+  if (corIds.length > 0) {
+    const { data: validCores } = await adminClient
+      .from('product_cores')
+      .select('product_id, cor_id')
+      .in('product_id', productIds)
+      .in('cor_id', corIds)
+    const validPairs = new Set((validCores ?? []).map(pc => `${pc.product_id}:${pc.cor_id}`))
+    const corItemInvalido = items.some(i => i.corId && !validPairs.has(`${i.productId}:${i.corId}`))
+    if (corItemInvalido) return { error: 'Cor inválida para algum produto do kit.' }
+  }
 
   const { sku } = await suggestPersonalizadoSku(items)
   if (!sku) return { error: 'Não foi possível gerar SKU.' }

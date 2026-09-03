@@ -26,7 +26,7 @@ type Product = {
   fichaTecnica: FichaTecnica
 }
 
-type KitItemEntry = { nome: string; sku: string; quantidade: number }
+type KitItemEntry = { nome: string; sku: string; corNome: string | null; quantidade: number }
 type Kit = { id: string; sku: string; nome: string; valor: number; itens: KitItemEntry[] }
 
 const fmtBRL = (n: number | null) =>
@@ -234,7 +234,7 @@ export default function CatalogoResellerView({ products, kits }: { products: Pro
                           borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
                           color: 'var(--soft)',
                         }}>
-                          {it.quantidade}× {it.nome}
+                          {it.quantidade}× {it.nome}{it.corNome ? ` — ${it.corNome}` : ''}
                         </span>
                       ))}
                     </div>

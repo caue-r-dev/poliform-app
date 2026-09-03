@@ -87,6 +87,13 @@ colisão vira erro "Já existe kit com SKU..." na hora de salvar — não
 salva kit errado silenciosamente, só pode bloquear uma combinação válida
 por coincidência de dígitos.
 
+Caveat adicional (achado em review, não bloqueia): o SKU é dependente da
+ordem em que as unidades são adicionadas — preto-depois-branco gera
+`1000.0001.0002`, branco-depois-preto gera `1000.0002.0001`. São o mesmo
+kit físico com SKUs diferentes, e a constraint `unique` em `kits.sku` não
+pega esse caso (não é a mesma string). Não corrigido nesta versão —
+decisão de produto, não bug.
+
 `suggestKitSkuMesmoProduto` não muda (fora do escopo).
 
 ## 3. `src/app/actions/kits.ts`
