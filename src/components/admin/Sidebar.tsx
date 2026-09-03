@@ -41,7 +41,7 @@ export default function Sidebar() {
     <aside className="theme-kreatop sidebar" style={{ minHeight: '100vh' }}>
       <div className="brand">
         <div className="logo-slot">
-          <img src="/logo-icon.jpg" alt="NexForm" />
+          <img src="/logo-icon-dark.png" alt="NexForm" />
         </div>
         <div className="word">nexform</div>
       </div>
