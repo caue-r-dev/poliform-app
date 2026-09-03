@@ -21,7 +21,7 @@ esse SKU combinado nem forma de cadastrar esse kit.
 
 ## 1. Schema
 
-Nova migration `supabase/migrations/011_kit_items_cor.sql`:
+Nova migration `supabase/migrations/013_kit_items_cor.sql`:
 
 ```sql
 alter table public.kit_items
