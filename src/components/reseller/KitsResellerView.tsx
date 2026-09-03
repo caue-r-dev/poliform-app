@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { createKitReseller, deleteKitReseller } from '@/app/actions/kits'
-import { suggestKitSkuPersonalizado } from '@/lib/kitSku'
+import { suggestKitSkuPersonalizado, buildKitUnidades } from '@/lib/kitSku'
 
 type ProductOption = { id: string; nome: string; sku: string; repasse: number | null }
 
@@ -12,7 +12,7 @@ type Kit = { id: string; sku: string; nome: string; valor: number; itens: KitIte
 const fmtBRL = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function KitsResellerView({ products, kits }: { products: ProductOption[]; kits: Kit[] }) {
-  const [items, setItems] = useState<{ productId: string; quantidade: number }[]>([])
+  const [items, setItems] = useState<{ productId: string; corId: string | null; quantidade: number }[]>([])
   const [selectedProductId, setSelectedProductId] = useState('')
   const [nome, setNome] = useState('')
   const [err, setErr] = useState('')
@@ -22,7 +22,8 @@ export default function KitsResellerView({ products, kits }: { products: Product
     if (items.length === 0) return ''
     const byId = new Map(products.map(p => [p.id, p.sku]))
     const skus = items.map(i => byId.get(i.productId)).filter((s): s is string => !!s)
-    return suggestKitSkuPersonalizado(skus)
+    const unidades = buildKitUnidades(skus.map((s, idx) => ({ productSku: s, corCodigo: null, quantidade: items[idx]?.quantidade ?? 1 })))
+    return suggestKitSkuPersonalizado(unidades)
   }, [items, products])
 
   const precoRepasse = useMemo(() => {
@@ -33,16 +34,16 @@ export default function KitsResellerView({ products, kits }: { products: Product
   function addItem() {
     if (!selectedProductId) return
     if (items.some(i => i.productId === selectedProductId)) return
-    setItems(list => [...list, { productId: selectedProductId, quantidade: 1 }])
+    setItems(list => [...list, { productId: selectedProductId, corId: null, quantidade: 1 }])
     setSelectedProductId('')
   }
 
   function setItemQtd(productId: string, quantidade: number) {
-    setItems(list => list.map(i => i.productId === productId ? { ...i, quantidade } : i))
+    setItems(list => list.map(i => i.productId === productId && i.corId === null ? { ...i, quantidade } : i))
   }
 
   function removeItem(productId: string) {
-    setItems(list => list.filter(i => i.productId !== productId))
+    setItems(list => list.filter(i => !(i.productId === productId && i.corId === null)))
   }
 
   function resetForm() {

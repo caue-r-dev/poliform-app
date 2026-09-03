@@ -3,9 +3,14 @@
 import { useEffect, useState } from 'react'
 import { createKitPersonalizado, deleteKit, suggestPersonalizadoSku } from '@/app/actions/kits'
 
-type ProductOption = { id: string; nome: string; sku: string }
+type CorOption = { id: string; nome: string; codigo: string }
+type ProductOption = { id: string; nome: string; sku: string; cores: CorOption[] }
 
-type KitItemRow = { quantidade: number; products: { nome: string; sku: string } | { nome: string; sku: string }[] }
+type KitItemRow = {
+  quantidade: number
+  products: { nome: string; sku: string } | { nome: string; sku: string }[]
+  cores_globais: { nome: string; codigo: string } | { nome: string; codigo: string }[] | null
+}
 
 type Kit = {
   id: string
@@ -21,9 +26,15 @@ function itemProduct(row: KitItemRow) {
   return Array.isArray(row.products) ? row.products[0] : row.products
 }
 
+function itemCor(row: KitItemRow) {
+  if (!row.cores_globais) return null
+  return Array.isArray(row.cores_globais) ? row.cores_globais[0] ?? null : row.cores_globais
+}
+
 export default function KitsView({ products, kits }: { products: ProductOption[]; kits: Kit[] }) {
-  const [items, setItems] = useState<{ productId: string; quantidade: number }[]>([])
+  const [items, setItems] = useState<{ productId: string; corId: string | null; quantidade: number }[]>([])
   const [selectedProductId, setSelectedProductId] = useState('')
+  const [selectedCorId, setSelectedCorId] = useState('')
   const [nome, setNome] = useState('')
   const [preco, setPreco] = useState('')
   const [sku, setSku] = useState('')
@@ -31,28 +42,37 @@ export default function KitsView({ products, kits }: { products: ProductOption[]
   const [err, setErr] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const selectedProduct = products.find(p => p.id === selectedProductId) ?? null
+
   useEffect(() => {
     if (skuTouched || items.length === 0) return
-    suggestPersonalizadoSku(items.map(i => i.productId)).then(res => setSku(res.sku))
+    suggestPersonalizadoSku(items).then(res => setSku(res.sku))
   }, [items, skuTouched])
+
+  function handleProductChange(productId: string) {
+    setSelectedProductId(productId)
+    setSelectedCorId('')
+  }
 
   function addItem() {
     if (!selectedProductId) return
-    if (items.some(i => i.productId === selectedProductId)) return
-    setItems(list => [...list, { productId: selectedProductId, quantidade: 1 }])
+    const corId = selectedCorId || null
+    if (items.some(i => i.productId === selectedProductId && i.corId === corId)) return
+    setItems(list => [...list, { productId: selectedProductId, corId, quantidade: 1 }])
     setSelectedProductId('')
+    setSelectedCorId('')
   }
 
-  function setItemQtd(productId: string, quantidade: number) {
-    setItems(list => list.map(i => i.productId === productId ? { ...i, quantidade } : i))
+  function setItemQtd(productId: string, corId: string | null, quantidade: number) {
+    setItems(list => list.map(i => (i.productId === productId && i.corId === corId) ? { ...i, quantidade } : i))
   }
 
-  function removeItem(productId: string) {
-    setItems(list => list.filter(i => i.productId !== productId))
+  function removeItem(productId: string, corId: string | null) {
+    setItems(list => list.filter(i => !(i.productId === productId && i.corId === corId)))
   }
 
   function resetForm() {
-    setItems([]); setSelectedProductId(''); setNome(''); setPreco(''); setSku(''); setSkuTouched(false)
+    setItems([]); setSelectedProductId(''); setSelectedCorId(''); setNome(''); setPreco(''); setSku(''); setSkuTouched(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,13 +100,24 @@ export default function KitsView({ products, kits }: { products: ProductOption[]
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 14, flexWrap: 'wrap' }}>
             <div className="field" style={{ minWidth: 220 }}>
               <label>Adicionar produto ao kit</label>
-              <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)}>
+              <select value={selectedProductId} onChange={e => handleProductChange(e.target.value)}>
                 <option value="">Selecione…</option>
-                {products.filter(p => !items.some(i => i.productId === p.id)).map(p => (
+                {products.map(p => (
                   <option key={p.id} value={p.id}>{p.nome} · {p.sku}</option>
                 ))}
               </select>
             </div>
+            {selectedProduct && selectedProduct.cores.length > 0 && (
+              <div className="field" style={{ minWidth: 160 }}>
+                <label>Cor</label>
+                <select value={selectedCorId} onChange={e => setSelectedCorId(e.target.value)}>
+                  <option value="">Sem cor</option>
+                  {selectedProduct.cores.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome} · {c.codigo}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <button type="button" onClick={addItem} className="btn btn-sm btn-ghost" style={{ marginBottom: 1 }}>+ Add produto</button>
           </div>
 
@@ -95,15 +126,18 @@ export default function KitsView({ products, kits }: { products: ProductOption[]
               {items.map(item => {
                 const p = products.find(pr => pr.id === item.productId)
                 if (!p) return null
+                const cor = item.corId ? p.cores.find(c => c.id === item.corId) : null
                 return (
-                  <div key={item.productId} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12.5, fontWeight: 700 }}>
-                    <span style={{ flex: 1 }}>{p.nome} <span style={{ color: 'var(--soft)' }}>· {p.sku}</span></span>
+                  <div key={`${item.productId}-${item.corId ?? ''}`} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12.5, fontWeight: 700 }}>
+                    <span style={{ flex: 1 }}>
+                      {p.nome}{cor ? ` (${cor.nome})` : ''} <span style={{ color: 'var(--soft)' }}>· {p.sku}</span>
+                    </span>
                     <input
                       type="number" min="1" step="1" value={item.quantidade}
-                      onChange={e => setItemQtd(item.productId, parseInt(e.target.value, 10) || 1)}
+                      onChange={e => setItemQtd(item.productId, item.corId, parseInt(e.target.value, 10) || 1)}
                       style={{ width: 70 }}
                     />
-                    <button type="button" onClick={() => removeItem(item.productId)} className="chip-x">×</button>
+                    <button type="button" onClick={() => removeItem(item.productId, item.corId)} className="chip-x">×</button>
                   </div>
                 )
               })}
@@ -152,13 +186,14 @@ export default function KitsView({ products, kits }: { products: ProductOption[]
               {kit.kit_items.map((row, i) => {
                 const p = itemProduct(row)
                 if (!p) return null
+                const cor = itemCor(row)
                 return (
                   <span key={i} style={{
                     fontSize: 12, fontWeight: 700, padding: '4px 10px',
                     borderRadius: 20, background: 'var(--card2)', border: '1px solid var(--line)',
                     color: 'var(--soft)',
                   }}>
-                    {row.quantidade}× {p.nome}
+                    {row.quantidade}× {p.nome}{cor ? ` — ${cor.nome}` : ''}
                   </span>
                 )
               })}
