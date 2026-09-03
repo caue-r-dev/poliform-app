@@ -16,18 +16,30 @@ export default async function ResellerKitsPage() {
     .from('resellers').select('id').eq('auth_user_id', user.id).single()
   if (!reseller) redirect('/login')
 
-  const [{ data: productRows }, { data: kitRows }] = await Promise.all([
-    adminClient.from('products').select('id, nome, sku, custo_producao, margem_producao').order('nome'),
+  const [{ data: rawProducts }, { data: kitRows }] = await Promise.all([
+    adminClient
+      .from('products')
+      .select('id, nome, sku, custo_producao, margem_producao, product_cores(cor_id, cores_globais(id, nome, codigo))')
+      .order('nome'),
     adminClient
       .from('kits')
-      .select('id, sku, nome, preco_repasse, kit_items(quantidade, products(nome, sku))')
+      .select('id, sku, nome, preco_repasse, kit_items(quantidade, products(nome, sku), cores_globais(nome, codigo))')
       .eq('reseller_id', reseller.id),
   ])
 
   // Só o repasse já calculado sai daqui, nunca custo_producao/margem_producao — mesma
   // regra do catálogo geral (reseller/catalogo/page.tsx).
-  const products = [...(productRows ?? [])]
-    .map(p => ({ id: p.id, nome: p.nome, sku: p.sku, repasse: calcCustoUnitario(p.custo_producao, p.margem_producao) }))
+  const products = (rawProducts ?? [])
+    .map(p => ({
+      id: p.id,
+      nome: p.nome,
+      sku: p.sku,
+      repasse: calcCustoUnitario(p.custo_producao, p.margem_producao),
+      cores: (p.product_cores ?? []).flatMap((pc: { cor_id: string; cores_globais: unknown }) => {
+        const cg = Array.isArray(pc.cores_globais) ? pc.cores_globais[0] : pc.cores_globais
+        return cg ? [{ id: pc.cor_id, nome: (cg as { nome: string }).nome, codigo: (cg as { codigo: string }).codigo }] : []
+      }),
+    }))
     .filter(p => p.repasse != null)
   products.sort((a, b) => compareSku(a.sku, b.sku))
 
@@ -36,9 +48,13 @@ export default async function ResellerKitsPage() {
     sku: k.sku,
     nome: k.nome,
     valor: k.preco_repasse,
-    itens: (k.kit_items ?? []).flatMap(item => {
+    itens: (k.kit_items ?? []).flatMap((item: { quantidade: number; products: unknown; cores_globais: unknown }) => {
       const prod = Array.isArray(item.products) ? item.products[0] : item.products
-      return prod ? [{ nome: prod.nome, sku: prod.sku, quantidade: item.quantidade }] : []
+      const cor = Array.isArray(item.cores_globais) ? item.cores_globais[0] : item.cores_globais
+      if (!prod) return []
+      const p = prod as { nome: string; sku: string }
+      const c = cor as { nome: string } | null
+      return [{ nome: p.nome, sku: p.sku, corNome: c?.nome ?? null, quantidade: item.quantidade }]
     }),
   }))
   kits.sort((a, b) => compareSku(a.sku, b.sku))
