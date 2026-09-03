@@ -39,31 +39,63 @@ se `cor_id` for diferente entre elas (inclui o caso de uma ter cor e a outra
 
 ## 2. `src/lib/kitSku.ts`
 
-`suggestKitSkuPersonalizado` passa a receber uma lista de componentes
-`{ sku: string; corCodigo: string | null }[]` em vez de `string[]`.
-Cada componente vira `sku.codigo` quando tem cor (reaproveita o padrão já
-usado em `VendasView.tsx`, `EtiquetasResellerView`, `CatalogoResellerView`,
-PDF de catálogo), ou só `sku` quando não tem:
+`suggestKitSkuPersonalizado` é reescrita — sai o formato `KIT-{sku1}+{sku2}`,
+entra formato só com `.`, nunca `+`/`KIT-`/outro símbolo. Recebe uma lista
+"achatada" por unidade (cada `kit_item` linha expandida `quantidade` vezes),
+cada entrada `{ productSku: string; corCodigo: string | null }`:
 
 ```ts
 export function suggestKitSkuPersonalizado(
-  componentes: { sku: string; corCodigo: string | null }[],
+  unidades: { productSku: string; corCodigo: string | null }[],
 ): string {
-  const partes = componentes.map(c => c.corCodigo ? `${c.sku}.${c.corCodigo}` : c.sku)
-  return `KIT-${partes.join('+')}`
+  // Cabeçalho: sku de cada produto que tiver ao menos 1 unidade com cor,
+  // concatenados sem separador (sem símbolo — pedido explícito), 1x por produto,
+  // na ordem em que aparecem.
+  const produtosComCor = [...new Set(
+    unidades.filter(u => u.corCodigo).map(u => u.productSku)
+  )]
+  const cabecalho = produtosComCor.join('')
+
+  // Corpo: 1 segmento por unidade — código da cor se a unidade tem cor,
+  // senão o próprio sku do produto (produto sem cor cadastrada vira seu
+  // próprio "código" repetido por unidade).
+  const corpo = unidades.map(u => u.corCodigo ?? u.productSku)
+
+  return [cabecalho, ...corpo].filter(Boolean).join('.')
 }
 ```
 
-Exemplo: produto sku `1000`, cores `PT` (preto) e `BR` (branco) →
-`KIT-1000.PT+1000.BR`.
+Exemplos (confirmados com o usuário):
+- 1 produto (`1000`), 2 unidades, mesma cor `0001` → `1000.0001.0001`
+- 1 produto (`1000`), 2 unidades, cores `0001`/`0002` → `1000.0001.0002`
+- 2 produtos (`1000` cor `0001`, `1011` cor `0003`), 1 unidade cada →
+  `10001011.0001.0003` (cabeçalho = skus concatenados sem separador)
+- 1 produto (`1000`), sem cor cadastrada, 2 unidades → `1000.1000`
+  (sem cabeçalho — produto sem cor não entra na concatenação do cabeçalho,
+  cada unidade já carrega o próprio sku como segmento)
+- Misto: 1 unidade produto `1000` (cor `0001`) + 2 unidades produto `1011`
+  (sem cor cadastrada) → `1000.0001.1011.1011` (cabeçalho só do produto
+  com cor; produto sem cor só contribui segmentos repetidos do próprio sku)
+
+Caveat técnico (aceito explicitamente pelo usuário, registrado por
+transparência): concatenar SKUs de produtos sem separador no cabeçalho
+pode colidir — produtos `10`+`01` geram cabeçalho `1001`, igual a
+`100`+`1` ou a um produto cujo sku já seja `1001`. Não há como distinguir
+essas combinações só pelo SKU final; a checagem de unicidade continua
+sendo feita em `kits.sku` (constraint `unique` já existe), então uma
+colisão vira erro "Já existe kit com SKU..." na hora de salvar — não
+salva kit errado silenciosamente, só pode bloquear uma combinação válida
+por coincidência de dígitos.
 
 `suggestKitSkuMesmoProduto` não muda (fora do escopo).
 
 ## 3. `src/app/actions/kits.ts`
 
-- `suggestPersonalizadoSku(items: { productId: string; corId: string | null }[])`
-  — busca produtos e, se algum item tiver `corId`, busca `cores_globais.codigo`
-  também. Monta a lista de componentes e chama `suggestKitSkuPersonalizado`.
+- `suggestPersonalizadoSku(items: { productId: string; corId: string | null; quantidade: number }[])`
+  — busca produtos (sku) e, pros itens com `corId`, busca `cores_globais.codigo`.
+  Achata cada linha em `quantidade` unidades (ex: linha `{ quantidade: 2 }` vira
+  2 entradas `{ productSku, corCodigo }` repetidas) e chama
+  `suggestKitSkuPersonalizado` com a lista achatada.
 - `createKitPersonalizado(nome, items: { productId, corId, quantidade }[], precoRepasse, skuOverride?)`
   — insert em `kit_items` inclui `cor_id: i.corId`.
 - `createKitReseller(nome, items: { productId, corId, quantidade }[])`
