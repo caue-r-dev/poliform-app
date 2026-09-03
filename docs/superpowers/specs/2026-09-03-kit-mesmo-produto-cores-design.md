@@ -21,7 +21,7 @@ esse SKU combinado nem forma de cadastrar esse kit.
 
 ## 1. Schema
 
-Nova migration `supabase/migrations/011_kit_items_cor.sql`:
+Nova migration `supabase/migrations/013_kit_items_cor.sql`:
 
 ```sql
 alter table public.kit_items
@@ -86,6 +86,13 @@ sendo feita em `kits.sku` (constraint `unique` já existe), então uma
 colisão vira erro "Já existe kit com SKU..." na hora de salvar — não
 salva kit errado silenciosamente, só pode bloquear uma combinação válida
 por coincidência de dígitos.
+
+Caveat adicional (achado em review, não bloqueia): o SKU é dependente da
+ordem em que as unidades são adicionadas — preto-depois-branco gera
+`1000.0001.0002`, branco-depois-preto gera `1000.0002.0001`. São o mesmo
+kit físico com SKUs diferentes, e a constraint `unique` em `kits.sku` não
+pega esse caso (não é a mesma string). Não corrigido nesta versão —
+decisão de produto, não bug.
 
 `suggestKitSkuMesmoProduto` não muda (fora do escopo).
 

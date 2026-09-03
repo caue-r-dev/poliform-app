@@ -21,7 +21,7 @@
 ### Task 1: Migração de schema — `cor_id` em `kit_items`
 
 **Files:**
-- Create: `supabase/migrations/011_kit_items_cor.sql`
+- Create: `supabase/migrations/013_kit_items_cor.sql`
 
 **Interfaces:**
 - Produces: coluna `kit_items.cor_id uuid references cores_globais(id) on delete set null` — usada por todas as tasks seguintes.
@@ -46,7 +46,7 @@ alter table public.kit_items
 - [ ] **Step 2: Commit**
 
 ```bash
-git add supabase/migrations/011_kit_items_cor.sql
+git add supabase/migrations/013_kit_items_cor.sql
 git commit -m "feat: adiciona cor_id em kit_items pra permitir kit com mesmo produto em cores diferentes"
 ```
 

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function KitsRevendedoresPage() {
   const { data: kits } = await adminClient
     .from('kits')
-    .select('id, sku, nome, preco_repasse, resellers(nome), kit_items(quantidade, products(nome, sku))')
+    .select('id, sku, nome, preco_repasse, resellers(nome), kit_items(quantidade, products(nome, sku), cores_globais(nome, codigo))')
     .not('reseller_id', 'is', null)
 
   const sortedKits = [...(kits ?? [])].sort((a, b) => compareSku(a.sku, b.sku))
