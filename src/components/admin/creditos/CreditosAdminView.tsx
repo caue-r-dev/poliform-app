@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react'
 import { aprovarDeposito, rejeitarDeposito } from '@/app/actions/creditos'
 
-type Deposito = {
+type Transacao = {
   id: string
+  tipo: 'deposito' | 'debito'
   valor: number
   status: 'pendente' | 'confirmado' | 'revisao' | 'rejeitado'
   valor_ocr_lido: number | null
@@ -17,22 +18,34 @@ type Deposito = {
 const fmtBRL = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtDT = (s: string) => new Date(s).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
-function resellerNome(d: Deposito) {
-  const r = Array.isArray(d.resellers) ? d.resellers[0] : d.resellers
+function resellerNome(t: Transacao) {
+  const r = Array.isArray(t.resellers) ? t.resellers[0] : t.resellers
   return r?.nome ?? '—'
 }
 
-function statusTag(status: Deposito['status']) {
+function statusTag(status: Transacao['status']) {
   if (status === 'confirmado') return <span className="tag">Confirmado</span>
   if (status === 'rejeitado') return <span className="tag" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>Rejeitado</span>
   if (status === 'revisao') return <span className="tag tag-warn">Em revisão</span>
   return <span className="tag tag-muted">Pendente</span>
 }
 
-export default function CreditosAdminView({ depositos }: { depositos: Deposito[] }) {
+function downloadCSV(filename: string, rows: string[][]) {
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export default function CreditosAdminView({ transacoes }: { transacoes: Transacao[] }) {
   const [filtro, setFiltro] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
 
+  const depositos = useMemo(() => transacoes.filter(t => t.tipo === 'deposito'), [transacoes])
   const emRevisao = depositos.filter(d => d.status === 'revisao')
 
   const revendedores = useMemo(
@@ -40,6 +53,26 @@ export default function CreditosAdminView({ depositos }: { depositos: Deposito[]
     [depositos],
   )
   const filtrados = filtro ? depositos.filter(d => resellerNome(d) === filtro) : depositos
+
+  // Saldo por revendedor — acumulado (todo depósito confirmado, nunca
+  // diminui, é o total histórico recebido) e disponível (acumulado menos
+  // débitos) — calculado a partir de TODAS as transações, não só a lista
+  // de depósitos usada no resto da tela.
+  const saldoPorRevendedor = useMemo(() => {
+    const map = new Map<string, { acumulado: number; disponivel: number }>()
+    for (const t of transacoes) {
+      const nome = resellerNome(t)
+      const entry = map.get(nome) ?? { acumulado: 0, disponivel: 0 }
+      if (t.tipo === 'deposito' && t.status === 'confirmado') {
+        entry.acumulado += Number(t.valor)
+        entry.disponivel += Number(t.valor)
+      } else if (t.tipo === 'debito') {
+        entry.disponivel -= Number(t.valor)
+      }
+      map.set(nome, entry)
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'))
+  }, [transacoes])
 
   async function handleAprovar(id: string) {
     setBusy(id)
@@ -55,8 +88,47 @@ export default function CreditosAdminView({ depositos }: { depositos: Deposito[]
     if (res.error) alert(res.error)
   }
 
+  function handleExportar() {
+    const rows: string[][] = [['Revendedor', 'Valor', 'Status', 'Data', 'Comprovante']]
+    for (const d of filtrados) {
+      rows.push([resellerNome(d), fmtBRL(d.valor), d.status, fmtDT(d.criado_em), d.signedUrl ?? ''])
+    }
+    downloadCSV('comprovantes.csv', rows)
+  }
+
   return (
     <>
+      <div style={{ marginBottom: 22 }}>
+        <div className="section-head"><h3>Saldo por revendedor</h3></div>
+        <div className="card">
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Revendedor</th>
+                  <th>Saldo acumulado</th>
+                  <th>Saldo disponível</th>
+                </tr>
+              </thead>
+              <tbody>
+                {saldoPorRevendedor.length === 0 && (
+                  <tr className="empty-row">
+                    <td colSpan={3}><span className="ast">✳</span>Nenhum depósito cadastrado.</td>
+                  </tr>
+                )}
+                {saldoPorRevendedor.map(([nome, s]) => (
+                  <tr key={nome}>
+                    <td style={{ fontWeight: 800 }}>{nome}</td>
+                    <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(s.acumulado)}</td>
+                    <td className="mono" style={{ fontWeight: 800, color: 'var(--green)' }}>{fmtBRL(s.disponivel)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {emRevisao.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div className="section-head"><h3>Fila de revisão ({emRevisao.length})</h3></div>
@@ -85,7 +157,7 @@ export default function CreditosAdminView({ depositos }: { depositos: Deposito[]
         </div>
       )}
 
-      <div style={{ marginBottom: 18 }}>
+      <div style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
         <div className="field" style={{ maxWidth: 280 }}>
           <label>Filtrar por revendedor</label>
           <select value={filtro} onChange={e => setFiltro(e.target.value)}>
@@ -93,6 +165,7 @@ export default function CreditosAdminView({ depositos }: { depositos: Deposito[]
             {revendedores.map(nome => <option key={nome} value={nome}>{nome}</option>)}
           </select>
         </div>
+        <button onClick={handleExportar} className="btn btn-sm btn-ghost">Exportar comprovantes</button>
       </div>
 
       <div className="card">

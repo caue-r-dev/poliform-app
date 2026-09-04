@@ -4,10 +4,12 @@ import CreditosAdminView from '@/components/admin/creditos/CreditosAdminView'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminCreditosPage() {
+  // Busca TODAS as transações (depósito + débito) — a tela precisa dos
+  // débitos também pra calcular o saldo disponível por revendedor, não só
+  // a lista de depósitos.
   const { data: rows } = await adminClient
     .from('credit_transactions')
-    .select('id, valor, status, valor_ocr_lido, storage_path, criado_em, resellers(nome)')
-    .eq('tipo', 'deposito')
+    .select('id, tipo, valor, status, valor_ocr_lido, storage_path, criado_em, resellers(nome)')
     .order('criado_em', { ascending: false })
 
   const withUrls = await Promise.all(
@@ -28,7 +30,7 @@ export default async function AdminCreditosPage() {
           <p>Depósitos dos revendedores — aprove ou rejeite os que caíram em revisão</p>
         </div>
       </div>
-      <CreditosAdminView depositos={withUrls} />
+      <CreditosAdminView transacoes={withUrls} />
     </div>
   )
 }
