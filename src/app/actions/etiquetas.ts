@@ -73,6 +73,7 @@ export async function createEtiqueta(data: EtiquetaFormData) {
     date: new Date().toISOString().slice(0, 10),
     valor_unitario,
     total: valor_unitario * data.qtd,
+    custo_producao: product.custo_producao,
   }).select('id').single()
 
   if (saleErr || !sale) return { error: saleErr?.message ?? 'Erro ao registrar venda.' }
