@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { aprovarDeposito, rejeitarDeposito } from '@/app/actions/creditos'
+import { downloadCSV } from '@/lib/downloadCSV'
 
 type Transacao = {
   id: string
@@ -11,6 +12,7 @@ type Transacao = {
   valor_ocr_lido: number | null
   storage_path: string | null
   criado_em: string
+  reseller_id: string
   resellers: { nome: string } | { nome: string }[] | null
   signedUrl: string | null
 }
@@ -30,17 +32,6 @@ function statusTag(status: Transacao['status']) {
   return <span className="tag tag-muted">Pendente</span>
 }
 
-function downloadCSV(filename: string, rows: string[][]) {
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 export default function CreditosAdminView({ transacoes }: { transacoes: Transacao[] }) {
   const [filtro, setFiltro] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
@@ -48,30 +39,32 @@ export default function CreditosAdminView({ transacoes }: { transacoes: Transaca
   const depositos = useMemo(() => transacoes.filter(t => t.tipo === 'deposito'), [transacoes])
   const emRevisao = depositos.filter(d => d.status === 'revisao')
 
-  const revendedores = useMemo(
-    () => [...new Set(depositos.map(resellerNome))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
-    [depositos],
-  )
-  const filtrados = filtro ? depositos.filter(d => resellerNome(d) === filtro) : depositos
+  // Chaveado por reseller_id (não por nome) — nomes de revendedor não são
+  // únicos, dois "Maria Silva" não podem mesclar saldo/histórico.
+  const revendedores = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const d of depositos) map.set(d.reseller_id, resellerNome(d))
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+  }, [depositos])
+  const filtrados = filtro ? depositos.filter(d => d.reseller_id === filtro) : depositos
 
   // Saldo por revendedor — acumulado (todo depósito confirmado, nunca
   // diminui, é o total histórico recebido) e disponível (acumulado menos
   // débitos) — calculado a partir de TODAS as transações, não só a lista
   // de depósitos usada no resto da tela.
   const saldoPorRevendedor = useMemo(() => {
-    const map = new Map<string, { acumulado: number; disponivel: number }>()
+    const map = new Map<string, { nome: string; acumulado: number; disponivel: number }>()
     for (const t of transacoes) {
-      const nome = resellerNome(t)
-      const entry = map.get(nome) ?? { acumulado: 0, disponivel: 0 }
+      const entry = map.get(t.reseller_id) ?? { nome: resellerNome(t), acumulado: 0, disponivel: 0 }
       if (t.tipo === 'deposito' && t.status === 'confirmado') {
         entry.acumulado += Number(t.valor)
         entry.disponivel += Number(t.valor)
       } else if (t.tipo === 'debito') {
         entry.disponivel -= Number(t.valor)
       }
-      map.set(nome, entry)
+      map.set(t.reseller_id, entry)
     }
-    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'))
+    return [...map.entries()].sort((a, b) => a[1].nome.localeCompare(b[1].nome, 'pt-BR'))
   }, [transacoes])
 
   async function handleAprovar(id: string) {
@@ -116,9 +109,9 @@ export default function CreditosAdminView({ transacoes }: { transacoes: Transaca
                     <td colSpan={3}><span className="ast">✳</span>Nenhum depósito cadastrado.</td>
                   </tr>
                 )}
-                {saldoPorRevendedor.map(([nome, s]) => (
-                  <tr key={nome}>
-                    <td style={{ fontWeight: 800 }}>{nome}</td>
+                {saldoPorRevendedor.map(([id, s]) => (
+                  <tr key={id}>
+                    <td style={{ fontWeight: 800 }}>{s.nome}</td>
                     <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(s.acumulado)}</td>
                     <td className="mono" style={{ fontWeight: 800, color: 'var(--green)' }}>{fmtBRL(s.disponivel)}</td>
                   </tr>
@@ -162,7 +155,7 @@ export default function CreditosAdminView({ transacoes }: { transacoes: Transaca
           <label>Filtrar por revendedor</label>
           <select value={filtro} onChange={e => setFiltro(e.target.value)}>
             <option value="">Todos</option>
-            {revendedores.map(nome => <option key={nome} value={nome}>{nome}</option>)}
+            {revendedores.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
           </select>
         </div>
         <button onClick={handleExportar} className="btn btn-sm btn-ghost">Exportar comprovantes</button>

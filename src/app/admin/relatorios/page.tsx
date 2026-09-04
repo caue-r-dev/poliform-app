@@ -1,18 +1,24 @@
 import { adminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/fetchAllRows'
 import RelatoriosView from '@/components/admin/relatorios/RelatoriosView'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminRelatoriosPage() {
-  const [{ data: sales }, { data: resellers }] = await Promise.all([
-    adminClient
-      .from('sales')
-      .select(`
-        id, date, sku, qtd, valor_unitario, total, custo_producao,
-        resellers(nome),
-        products(nome, custo_producao)
-      `)
-      .order('date', { ascending: false }),
+  // Pagina alem do limite de 1000 linhas do PostgREST pra repasse/custo/
+  // lucro somados não ficarem errados quando o volume de vendas crescer.
+  const [sales, { data: resellers }] = await Promise.all([
+    fetchAllRows((from, to) =>
+      adminClient
+        .from('sales')
+        .select(`
+          id, date, sku, qtd, valor_unitario, total, custo_producao, reseller_id,
+          resellers(nome),
+          products(nome, custo_producao)
+        `)
+        .order('date', { ascending: false })
+        .range(from, to)
+    ),
     adminClient.from('resellers').select('id, nome').order('nome'),
   ])
 
@@ -24,7 +30,7 @@ export default async function AdminRelatoriosPage() {
           <p>Lucro líquido por venda — repasse cobrado menos custo de produção</p>
         </div>
       </div>
-      <RelatoriosView sales={sales ?? []} resellers={resellers ?? []} />
+      <RelatoriosView sales={sales} resellers={resellers ?? []} />
     </div>
   )
 }

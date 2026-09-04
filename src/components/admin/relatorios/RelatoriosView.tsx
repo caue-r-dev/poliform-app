@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { downloadCSV } from '@/lib/downloadCSV'
 
 type SaleRow = {
   id: string
@@ -10,6 +11,7 @@ type SaleRow = {
   valor_unitario: number
   total: number
   custo_producao: number | null
+  reseller_id: string | null
   resellers: { nome: string } | { nome: string }[] | null
   products: { nome: string; custo_producao: number } | { nome: string; custo_producao: number }[] | null
 }
@@ -29,21 +31,17 @@ function produtoNome(row: SaleRow) {
   return p?.nome ?? '—'
 }
 
-function custoUnitario(row: SaleRow): { valor: number; estimado: boolean } {
-  const p = Array.isArray(row.products) ? row.products[0] : row.products
-  if (row.custo_producao != null) return { valor: Number(row.custo_producao), estimado: false }
-  return { valor: p?.custo_producao != null ? Number(p.custo_producao) : 0, estimado: true }
-}
+type CustoEstado = 'exato' | 'estimado' | 'desconhecido'
 
-function downloadCSV(filename: string, rows: string[][]) {
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+// 'exato': snapshot gravado na venda. 'estimado': venda anterior à
+// migration 015, usa o custo atual do produto. 'desconhecido': nem a
+// venda nem o produto (deletado do catálogo) têm custo — não é uma
+// estimativa, é um valor que não pode ser calculado.
+function custoUnitario(row: SaleRow): { valor: number; estado: CustoEstado } {
+  if (row.custo_producao != null) return { valor: Number(row.custo_producao), estado: 'exato' }
+  const p = Array.isArray(row.products) ? row.products[0] : row.products
+  if (p?.custo_producao != null) return { valor: Number(p.custo_producao), estado: 'estimado' }
+  return { valor: 0, estado: 'desconhecido' }
 }
 
 function primeiroDiaDoMes() {
@@ -62,17 +60,17 @@ export default function RelatoriosView({ sales, resellers }: { sales: SaleRow[];
   const filtradas = useMemo(() => {
     return sales.filter(row => {
       if (row.date < dataInicio || row.date > dataFim) return false
-      if (revendedorFiltro && resellerNome(row) !== revendedorFiltro) return false
+      if (revendedorFiltro && row.reseller_id !== revendedorFiltro) return false
       return true
     })
   }, [sales, dataInicio, dataFim, revendedorFiltro])
 
   const linhas = useMemo(() => {
     return filtradas.map(row => {
-      const { valor: custoUnit, estimado } = custoUnitario(row)
+      const { valor: custoUnit, estado } = custoUnitario(row)
       const custoTotal = custoUnit * row.qtd
       const lucro = Number(row.total) - custoTotal
-      return { row, custoTotal, lucro, estimado }
+      return { row, custoTotal, lucro, estado }
     })
   }, [filtradas])
 
@@ -110,7 +108,7 @@ export default function RelatoriosView({ sales, resellers }: { sales: SaleRow[];
           <label>Revendedor</label>
           <select value={revendedorFiltro} onChange={e => setRevendedorFiltro(e.target.value)}>
             <option value="">Todos</option>
-            {resellers.map(r => <option key={r.id} value={r.nome}>{r.nome}</option>)}
+            {resellers.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
           </select>
         </div>
         <button onClick={handleExportar} className="btn btn-sm btn-ghost">Exportar CSV</button>
@@ -151,7 +149,7 @@ export default function RelatoriosView({ sales, resellers }: { sales: SaleRow[];
                   <td colSpan={7}><span className="ast">✳</span>Nenhuma venda no período.</td>
                 </tr>
               )}
-              {linhas.map(({ row, custoTotal, lucro, estimado }) => (
+              {linhas.map(({ row, custoTotal, lucro, estado }) => (
                 <tr key={row.id}>
                   <td style={{ fontSize: 12 }}>{fmtDate(row.date)}</td>
                   <td style={{ fontWeight: 800 }}>{resellerNome(row)}</td>
@@ -163,7 +161,8 @@ export default function RelatoriosView({ sales, resellers }: { sales: SaleRow[];
                   <td className="mono" style={{ fontWeight: 800 }}>{fmtBRL(Number(row.total))}</td>
                   <td className="mono">
                     {fmtBRL(custoTotal)}
-                    {estimado && <span style={{ marginLeft: 4, fontSize: 10.5, color: 'var(--soft)' }}>~ estimado</span>}
+                    {estado === 'estimado' && <span style={{ marginLeft: 4, fontSize: 10.5, color: 'var(--soft)' }}>~ estimado</span>}
+                    {estado === 'desconhecido' && <span style={{ marginLeft: 4, fontSize: 10.5, color: 'var(--red)' }}>custo desconhecido</span>}
                   </td>
                   <td className="mono" style={{ fontWeight: 800, color: 'var(--green)' }}>{fmtBRL(lucro)}</td>
                 </tr>

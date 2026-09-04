@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/fetchAllRows'
 import CreditosAdminView from '@/components/admin/creditos/CreditosAdminView'
 
 export const dynamic = 'force-dynamic'
@@ -6,14 +7,18 @@ export const dynamic = 'force-dynamic'
 export default async function AdminCreditosPage() {
   // Busca TODAS as transações (depósito + débito) — a tela precisa dos
   // débitos também pra calcular o saldo disponível por revendedor, não só
-  // a lista de depósitos.
-  const { data: rows } = await adminClient
-    .from('credit_transactions')
-    .select('id, tipo, valor, status, valor_ocr_lido, storage_path, criado_em, resellers(nome)')
-    .order('criado_em', { ascending: false })
+  // a lista de depósitos. Pagina alem do limite de 1000 linhas do
+  // PostgREST pra saldo acumulado/disponível não ficarem errados.
+  const rows = await fetchAllRows((from, to) =>
+    adminClient
+      .from('credit_transactions')
+      .select('id, tipo, valor, status, valor_ocr_lido, storage_path, criado_em, reseller_id, resellers(nome)')
+      .order('criado_em', { ascending: false })
+      .range(from, to)
+  )
 
   const withUrls = await Promise.all(
-    (rows ?? []).map(async r => {
+    rows.map(async r => {
       if (!r.storage_path) return { ...r, signedUrl: null }
       const { data } = await adminClient.storage
         .from('comprovantes')
