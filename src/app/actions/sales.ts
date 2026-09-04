@@ -52,6 +52,7 @@ export async function createSale(data: SaleFormData) {
     date: data.date,
     valor_unitario,
     total: valor_unitario * data.qtd,
+    custo_producao: product.custo_producao,
   })
 
   if (error) return { error: error.message }
